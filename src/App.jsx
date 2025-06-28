@@ -5,6 +5,7 @@ import {
 } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import LoanApplicationPage from "./pages/LoanApplicationPage";
 import {Layout,  RequireAuth } from "../src/pages/Layout";
 const App = () =>{
   const router = createBrowserRouter([
@@ -33,6 +34,10 @@ const App = () =>{
         {
           path: "/login",
           element: <Login/>
+        },
+        {
+          path: "/apply/:loanType",
+          element: <LoanApplicationPage/>
         },
       ]
     },

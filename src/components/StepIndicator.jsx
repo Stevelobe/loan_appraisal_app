@@ -2,19 +2,24 @@ import React from 'react';
 
 const StepIndicator = ({ currentStep, steps }) => {
   return (
-    <div className="flex justify-between items-center mb-10 relative">
-      <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-300 transform -translate-y-1/2 mx-8"></div>
-      {steps.map((stepName, index) => (
-        <div key={index} className="flex flex-col items-center z-10">
+    <div className="mb-8 flex justify-between items-center relative">
+      <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -translate-y-1/2 z-0"></div>
+      {steps.map((step, index) => (
+        <div key={index} className="flex flex-col items-center z-10 w-1/3">
           <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold
-              ${index + 1 <= currentStep ? 'bg-green-500' : 'bg-gray-400'}`}
+            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white transition-colors duration-300
+              ${index + 1 <= currentStep ? 'bg-blue-500' : 'bg-gray-400'}
+            `}
           >
             {index + 1}
           </div>
-          <span className={`mt-2 text-sm ${index + 1 <= currentStep ? 'text-green-600' : 'text-gray-600'}`}>
-            {stepName}
-          </span>
+          <div
+            className={`text-sm mt-2 text-center transition-colors duration-300
+              ${index + 1 <= currentStep ? 'text-blue-600 font-medium' : 'text-gray-500'}
+            `}
+          >
+            {step}
+          </div>
         </div>
       ))}
     </div>
