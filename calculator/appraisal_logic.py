@@ -1,151 +1,438 @@
 # calculator/appraisal_logic.py
+
 import math
+from decimal import Decimal
 
-def calculate_monthly_payment(principal, annual_interest_rate, loan_term_months):
+# --- Global Loan Policy Constants (Example Values - Adjust as per Union Policy) ---
+MORTGAGE_LOAN_MAX_AMOUNT = Decimal('500000000')
+MORTGAGE_LOAN_MAX_TENURE_YEARS = 10
+SALARY_BACKED_LOAN_MAX_AMOUNT = Decimal('10000000') # 10M XAF per policy
+SAVINGS_GE_1_10_LOAN_RATIO = Decimal('0.10') # 1/10 of loan requested
+LOAN_DURATION_LE_1_YEAR_MONTHS = 12 # For Standing Order Loans
+SAVINGS_BALANCE_GE_1_5_LOAN_RATIO = Decimal('0.20') # 1/5 of loan requested
+
+# --- Scoring Thresholds (Common to all loan types) ---
+APPROVAL_THRESHOLD = 96
+BOARD_REVIEW_THRESHOLD = 75
+
+def calculate_monthly_payment(principal, annual_interest_rate, loan_term_years):
     """
-    Calculates the monthly loan payment using the amortized loan formula.
+    Calculates the monthly loan payment using the annuity formula.
+    Ensures all calculations are done with Decimal for precision.
     """
-    if loan_term_months <= 0:
-        return 0.0
+    if annual_interest_rate == Decimal('0'):
+        # Simple interest for 0% rate
+        return principal / (Decimal(loan_term_years) * Decimal('12'))
 
-    monthly_interest_rate = annual_interest_rate / 12
+    monthly_interest_rate = (annual_interest_rate / Decimal('100')) / Decimal('12')
+    number_of_payments = Decimal(loan_term_years) * Decimal('12')
 
-    if monthly_interest_rate == 0:
-        return principal / loan_term_months
-    else:
-        numerator = monthly_interest_rate * (1 + monthly_interest_rate)**loan_term_months
-        denominator = (1 + monthly_interest_rate)**loan_term_months - 1
-        monthly_payment = principal * (numerator / denominator)
+    if number_of_payments == 0:
+        return Decimal('0')
+
+    try:
+        term_raised_to_power = (Decimal('1') + monthly_interest_rate)**number_of_payments
+        monthly_payment = principal * (monthly_interest_rate * term_raised_to_power) / \
+                          (term_raised_to_power - Decimal('1'))
         return monthly_payment
+    except ZeroDivisionError:
+        return principal / (Decimal(loan_term_years) * Decimal('12'))
 
-def calculate_debt_to_income_ratio(gross_monthly_income, total_monthly_debt):
+def _check_full_kyc(data):
     """
-    Calculates the Debt-to-Income (DTI) ratio.
+    Helper function to check if all new KYC fields are provided.
     """
-    if gross_monthly_income <= 0:
-        return 0.0
-    return total_monthly_debt / gross_monthly_income
+    kyc_fields = [
+        'identity_card_number', 'place_of_birth', 'current_address',
+        'marital_status', 'duration_with_mfi_years', 'num_loans_other_mfi',
+        'profession'
+    ]
+    # Check if all KYC fields are present and not empty/None
+    for field in kyc_fields:
+        value = data.get(field)
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return False
+        # For integer fields, ensure they are not 0 if that implies missing data
+        if isinstance(value, int) and value == 0 and field in ['duration_with_mfi_years', 'num_loans_other_mfi']:
+             # This is a judgment call: if 0 is a valid answer, remove this check.
+             # For now, assuming 0 might mean "not provided" for these specific fields.
+             pass # Let's allow 0 for now as it could be valid.
+    return True
 
-# --- NEW FUNCTION FOR AUTOMATED CREDIT SCORE ---
-def estimate_credit_score_category(gross_monthly_income, existing_monthly_debt_payments, calculated_dti_ratio):
+def appraise_mortgage_loan(data):
     """
-    Estimates a credit score category (Good, Average, Poor) based on financial inputs.
-    This is a simplified heuristic and not a real credit score calculation.
+    Appraises a Mortgage Loan application.
     """
-    if gross_monthly_income <= 0:
-        return "Poor" # Cannot assess if no income
+    total_score = Decimal('0')
+    reasons = []
 
-    # Existing debt as a percentage of income
-    existing_debt_income_ratio = existing_monthly_debt_payments / gross_monthly_income
+    loan_amount = data.get('loan_amount')
+    annual_interest_rate = data.get('annual_interest_rate_percent')
+    loan_term_years = data.get('loan_term_years')
+    borrower_gross_monthly_income = data.get('borrower_gross_monthly_income')
+    existing_monthly_debt_payments = data.get('existing_monthly_debt_payments', Decimal('0'))
 
-    # Heuristic rules based on DTI and existing debt burden
-    if calculated_dti_ratio <= 0.30 and existing_debt_income_ratio <= 0.15:
-        return "Good"
-    elif calculated_dti_ratio <= 0.40 and existing_debt_income_ratio <= 0.30:
-        return "Average"
-    else:
-        return "Poor"
-# --- END NEW FUNCTION ---
-
-def appraise_loan_application(
-    loan_amount,
-    annual_interest_rate_percent,
-    loan_term_years,
-    borrower_gross_monthly_income,
-    existing_monthly_debt_payments,
-    credit_score=None, # This parameter will now be populated by the automated function
-    min_dti_for_approval=0.43,
-    min_income_multiplier_for_loan=2.5
-):
-    """
-    Appraises a loan application based on various criteria.
-    """
-    results = {
-        "approved": False,
-        "reasons": [],
-        "monthly_payment_new_loan": 0.0,
-        "total_monthly_debt": 0.0,
-        "dti_ratio": 0.0,
-        "loan_amount_to_annual_income_ratio": 0.0,
-        "estimated_credit_score": credit_score # Store the estimated score for display
+    # --- Document-based Criteria (Checks if file was provided) ---
+    doc_criteria = {
+        'legal_mortgage_agreement_document': {'weight': 30, 'notes': "Legal Mortgage Agreement on Land Title"},
+        'land_title_document': {'weight': 15, 'notes': "Land Title in Borrower's Name"},
+        'power_of_attorney_document': {'weight': 10, 'notes': "Power of Attorney (if applicable)"},
+        'loan_purpose_document': {'weight': 5, 'notes': "Purpose of Loan Clearly Stated & Valid (Document)"},
+        'supporting_documents': {'weight': 5, 'notes': "Supporting Documents Uploaded (Site Plan, Quotes, etc.)"},
     }
 
-    annual_interest_rate_decimal = annual_interest_rate_percent / 100.0
-    loan_term_months = loan_term_years * 12
+    for field, details in doc_criteria.items():
+        if data.get(field): # Check if file was provided
+            total_score += Decimal(str(details['weight']))
+            reasons.append(f"✔ {details['notes']} (Provided, +{details['weight']}%)")
+        else:
+            reasons.append(f"✖ {details['notes']} (Not Provided, +0%)")
 
-    monthly_payment_new_loan = calculate_monthly_payment(
-        loan_amount, annual_interest_rate_decimal, loan_term_months
-    )
-    results["monthly_payment_new_loan"] = round(monthly_payment_new_loan, 2)
+    # --- KYC Fields (Replaces old full_kyc_document) ---
+    if _check_full_kyc(data):
+        total_score += Decimal('10') # Weight for Full KYC
+        reasons.append("✔ Full KYC (ID, Place of Birth, Address, etc.) Provided. (+10%)")
+    else:
+        reasons.append("✖ Full KYC (ID, Place of Birth, Address, etc.) Not Fully Provided. (+0%)")
 
-    if monthly_payment_new_loan <= 0 and loan_amount > 0:
-        results["reasons"].append("Calculation Error: Monthly payment could not be determined or is zero for a non-zero loan amount.")
-        return results
+    # --- System-Check Criteria (Boolean fields) ---
+    sys_check_criteria = {
+        'no_existing_npl': {'weight': 5, 'notes': "No Existing Non-Performing Loan (System Check)"},
+    }
+    for field, details in sys_check_criteria.items():
+        if data.get(field):
+            total_score += Decimal(str(details['weight']))
+            reasons.append(f"✔ {details['notes']} (Met, +{details['weight']}%)")
+        else:
+            reasons.append(f"✖ {details['notes']} (Not Met, +0%)")
 
+    # --- Calculated/Policy-Based Criteria (remain unchanged) ---
+    if loan_amount <= MORTGAGE_LOAN_MAX_AMOUNT:
+        total_score += Decimal('5')
+        reasons.append(f"✔ Loan Amount ({loan_amount:,.0f} XAF) is within Union Policy ({MORTGAGE_LOAN_MAX_AMOUNT:,.0f} XAF cap). (+5%)")
+    else:
+        reasons.append(f"✖ Loan Amount ({loan_amount:,.0f} XAF) exceeds Union Policy ({MORTGAGE_LOAN_MAX_AMOUNT:,.0f} XAF cap). (+0%)")
+
+    if loan_term_years <= MORTGAGE_LOAN_MAX_TENURE_YEARS:
+        total_score += Decimal('5')
+        reasons.append(f"✔ Loan Duration ({loan_term_years} years) is within Union Policy ({MORTGAGE_LOAN_MAX_TENURE_YEARS} years max). (+5%)")
+    else:
+        reasons.append(f"✖ Loan Duration ({loan_term_years} years) exceeds Union Policy ({MORTGAGE_LOAN_MAX_TENURE_YEARS} years max). (+0%)")
+
+    monthly_payment_new_loan = calculate_monthly_payment(loan_amount, annual_interest_rate, loan_term_years)
     total_monthly_debt = monthly_payment_new_loan + existing_monthly_debt_payments
-    results["total_monthly_debt"] = round(total_monthly_debt, 2)
+    estimated_net_monthly_income = borrower_gross_monthly_income * Decimal('0.8')
 
-    dti_ratio = calculate_debt_to_income_ratio(
-        borrower_gross_monthly_income, total_monthly_debt
-    )
-    results["dti_ratio"] = round(dti_ratio, 2)
+    dti_ratio = Decimal('0')
+    dti_percentage = Decimal('0')
 
-    borrower_annual_income = borrower_gross_monthly_income * 12
-    loan_amount_to_annual_income_ratio = 0.0
-    if borrower_annual_income > 0:
-        loan_amount_to_annual_income_ratio = loan_amount / borrower_annual_income
-    results["loan_amount_to_annual_income_ratio"] = round(loan_amount_to_annual_income_ratio, 2)
+    if estimated_net_monthly_income > Decimal('0'):
+        dti_ratio = (total_monthly_debt / estimated_net_monthly_income)
+        dti_percentage = dti_ratio * Decimal('100')
 
-    is_eligible = True
+        if dti_percentage <= Decimal('40'):
+            total_score += Decimal('10')
+            reasons.append(f"✔ Monthly Repayment ({total_monthly_debt:,.0f} XAF) is ≤ 40% of Estimated Net Income ({estimated_net_monthly_income:,.0f} XAF). DTI: {dti_percentage:.1f}%. (+10%)")
+        else:
+            reasons.append(f"✖ Monthly Repayment ({total_monthly_debt:,.0f} XAF) exceeds 40% of Estimated Net Income ({estimated_net_monthly_income:,.0f} XAF). DTI: {dti_percentage:.1f}%. (+0%)")
+    else:
+        reasons.append("✖ Cannot calculate repayment affordability: Estimated Net Income is zero. (+0%)")
 
-    if borrower_gross_monthly_income <= 0:
-        is_eligible = False
-        results["reasons"].append("Insufficient income: Borrower's gross monthly income is zero or negative.")
-    elif borrower_gross_monthly_income < monthly_payment_new_loan * 1.5:
-        results["reasons"].append(
-            f"Income appears low relative to the proposed monthly payment (less than 1.5x). "
-            f"Required: {round(monthly_payment_new_loan * 1.5, 2)} XAF. Provided: {borrower_gross_monthly_income} XAF."
-        )
-        is_eligible = False
+    loan_amount_to_annual_income_ratio = (loan_amount / (borrower_gross_monthly_income * Decimal('12'))) if borrower_gross_monthly_income > Decimal('0') else Decimal('0')
 
-    if dti_ratio > min_dti_for_approval:
-        is_eligible = False
-        results["reasons"].append(
-            f"High Debt-to-Income (DTI) ratio: {dti_ratio * 100:.2f}%. "
-            f"Exceeds maximum allowable DTI of {min_dti_for_approval * 100:.2f}%."
-        )
+    approved_status = None
+    if total_score >= APPROVAL_THRESHOLD:
+        approved_status = True
+    elif total_score >= BOARD_REVIEW_THRESHOLD:
+        approved_status = None
+    else:
+        approved_status = False
 
-    if borrower_annual_income > 0 and loan_amount_to_annual_income_ratio > min_income_multiplier_for_loan:
-        is_eligible = False
-        results["reasons"].append(
-            f"Loan amount is too high relative to annual income ({loan_amount_to_annual_income_ratio:.2f}x). "
-            f"Maximum recommended is {min_income_multiplier_for_loan:.1f}x annual income."
-        )
+    return {
+        'score': float(total_score),
+        'approved': approved_status,
+        'reasons': reasons,
+        'monthly_payment_new_loan': float(monthly_payment_new_loan),
+        'total_monthly_debt': float(total_monthly_debt),
+        'dti_ratio': float(dti_ratio),
+        'dti_percentage': float(dti_percentage),
+        'estimated_net_monthly_income': float(estimated_net_monthly_income),
+        'loan_amount_to_annual_income_ratio': float(loan_amount_to_annual_income_ratio),
+    }
 
-    # --- Use the estimated credit score directly in appraisal logic ---
-    if credit_score: # credit_score is now the estimated_credit_score_category
-        if credit_score.lower() == "poor":
-            is_eligible = False
-            results["reasons"].append("Estimated credit score is Poor (based on financial profile), indicating high risk.")
-        elif credit_score.lower() == "average" and dti_ratio > 0.36:
-            is_eligible = False
-            results["reasons"].append("Estimated credit score is Average with a DTI ratio over 36%, which is high risk.")
-    # No 'else' for missing credit score because it's now always estimated
+def appraise_salary_backed_loan(data):
+    """
+    Appraises a Salary-Backed Loan application.
+    """
+    total_score = Decimal('0')
+    reasons = []
 
-    if loan_term_years > 20:
-        is_eligible = False
-        results["reasons"].append("Loan term is excessively long (over 20 years).")
+    loan_amount = data.get('loan_amount')
+    dummy_monthly_payment = Decimal('0')
+    dummy_total_monthly_debt = Decimal('0')
+    dummy_dti_ratio = Decimal('0')
+    dummy_dti_percentage = Decimal('0')
+    dummy_estimated_net_monthly_income = Decimal('0')
+    dummy_loan_amount_to_annual_income_ratio = Decimal('0')
 
-    if loan_amount < 100000:
-        results["reasons"].append("Loan amount is below the minimum threshold (100,000 XAF).")
+    # Document-based Criteria
+    doc_criteria = {
+        'loan_purpose_document': {'weight': 5, 'notes': "Purpose of Loan Clearly Defined (Document)"},
+        'copy_of_effective_service_document': {'weight': 15, 'notes': "Copy of Effective Service"},
+        'irrevocable_salary_transfer_document': {'weight': 20, 'notes': "Irrevocable Salary Transfer Document"},
+    }
+    for field, details in doc_criteria.items():
+        if data.get(field):
+            total_score += Decimal(str(details['weight']))
+            reasons.append(f"✔ {details['notes']} (Provided, +{details['weight']}%)")
+        else:
+            reasons.append(f"✖ {details['notes']} (Not Provided, +0%)")
 
-    if is_eligible and not results["reasons"]:
-        results["approved"] = True
-        results["reasons"].append("Loan application approved based on provided criteria.")
-    elif not results["reasons"] and not is_eligible:
-        results["reasons"].append("Loan application declined due to unspecified internal criteria.")
-    elif is_eligible and results["reasons"]:
-        results["approved"] = True
-        results["reasons"].insert(0, "Loan application approved, but with some flagged concerns.")
+    # KYC Fields
+    if _check_full_kyc(data):
+        total_score += Decimal('10') # Weight for Full KYC
+        reasons.append("✔ Full KYC (ID, Place of Birth, Address, etc.) Provided. (+10%)")
+    else:
+        reasons.append("✖ Full KYC (ID, Place of Birth, Address, etc.) Not Fully Provided. (+0%)")
 
-    return results
+    # System-Check Criteria
+    sys_check_criteria = {
+        'salary_passing_union_ge_3_months': {'weight': 20, 'notes': "Salary Passing Through Union for ≥ 3 Months"},
+        'savings_ge_1_10_loan': {'weight': 15, 'notes': f"Savings ≥ {SAVINGS_GE_1_10_LOAN_RATIO*100:.0f}% of Loan Requested"},
+    }
+    for field, details in sys_check_criteria.items():
+        if data.get(field):
+            total_score += Decimal(str(details['weight']))
+            reasons.append(f"✔ {details['notes']} (Met, +{details['weight']}%)")
+        else:
+            reasons.append(f"✖ {details['notes']} (Not Met, +0%)")
+
+    # Policy Check: Loan Amount <= 10M (15%)
+    if loan_amount <= SALARY_BACKED_LOAN_MAX_AMOUNT:
+        total_score += Decimal('15')
+        reasons.append(f"✔ Loan Amount ({loan_amount:,.0f} XAF) is ≤ 10M XAF per Union Policy. (+15%)")
+    else:
+        reasons.append(f"✖ Loan Amount ({loan_amount:,.0f} XAF) exceeds 10M XAF per Union Policy. (+0%)")
+
+    approved_status = None
+    if total_score >= APPROVAL_THRESHOLD:
+        approved_status = True
+    elif total_score >= BOARD_REVIEW_THRESHOLD:
+        approved_status = None
+    else:
+        approved_status = False
+
+    return {
+        'score': float(total_score),
+        'approved': approved_status,
+        'reasons': reasons,
+        'monthly_payment_new_loan': float(dummy_monthly_payment),
+        'total_monthly_debt': float(dummy_total_monthly_debt),
+        'dti_ratio': float(dummy_dti_ratio),
+        'dti_percentage': float(dummy_dti_percentage),
+        'estimated_net_monthly_income': float(dummy_estimated_net_monthly_income),
+        'loan_amount_to_annual_income_ratio': float(dummy_loan_amount_to_annual_income_ratio),
+    }
+
+def appraise_loan_within_savings(data):
+    """
+    Appraises a Loan Within Savings application.
+    """
+    total_score = Decimal('0')
+    reasons = []
+
+    loan_amount = data.get('loan_amount')
+    dummy_monthly_payment = Decimal('0')
+    dummy_total_monthly_debt = Decimal('0')
+    dummy_dti_ratio = Decimal('0')
+    dummy_dti_percentage = Decimal('0')
+    dummy_estimated_net_monthly_income = Decimal('0')
+    dummy_loan_amount_to_annual_income_ratio = Decimal('0')
+
+    # Document-based Criteria
+    doc_criteria = {
+        'loan_purpose_document': {'weight': 5, 'notes': "Purpose of Loan Clearly Defined (Document)"},
+    }
+    for field, details in doc_criteria.items():
+        if data.get(field):
+            total_score += Decimal(str(details['weight']))
+            reasons.append(f"✔ {details['notes']} (Provided, +{details['weight']}%)")
+        else:
+            reasons.append(f"✖ {details['notes']} (Not Provided, +0%)")
+
+    # KYC Fields
+    if _check_full_kyc(data):
+        total_score += Decimal('10') # Weight for Full KYC
+        reasons.append("✔ Full KYC (ID, Place of Birth, Address, etc.) Provided. (+10%)")
+    else:
+        reasons.append("✖ Full KYC (ID, Place of Birth, Address, etc.) Not Fully Provided. (+0%)")
+
+    # System-Check Criteria
+    sys_check_criteria = {
+        'savings_covers_loan_plus_interest': {'weight': 45, 'notes': "Savings Covers Loan + Interest for Entire Tenure"},
+        'loan_amount_blocked_in_savings': {'weight': 35, 'notes': "Loan Amount Is Blocked in Savings Account"},
+        'no_active_default': {'weight': 5, 'notes': "No Active Default/Delinquent Loan"},
+    }
+    for field, details in sys_check_criteria.items():
+        if data.get(field):
+            total_score += Decimal(str(details['weight']))
+            reasons.append(f"✔ {details['notes']} (Met, +{details['weight']}%)")
+        else:
+            reasons.append(f"✖ {details['notes']} (Not Met, +0%)")
+
+    approved_status = None
+    if total_score >= APPROVAL_THRESHOLD:
+        approved_status = True
+    elif total_score >= BOARD_REVIEW_THRESHOLD:
+        approved_status = None
+    else:
+        approved_status = False
+
+    return {
+        'score': float(total_score),
+        'approved': approved_status,
+        'reasons': reasons,
+        'monthly_payment_new_loan': float(dummy_monthly_payment),
+        'total_monthly_debt': float(dummy_total_monthly_debt),
+        'dti_ratio': float(dummy_dti_ratio),
+        'dti_percentage': float(dummy_dti_percentage),
+        'estimated_net_monthly_income': float(dummy_estimated_net_monthly_income),
+        'loan_amount_to_annual_income_ratio': float(dummy_loan_amount_to_annual_income_ratio),
+    }
+
+def appraise_loan_above_savings(data):
+    """
+    Appraises a Loan Above Savings application.
+    """
+    total_score = Decimal('0')
+    reasons = []
+
+    loan_amount = data.get('loan_amount')
+    dummy_monthly_payment = Decimal('0')
+    dummy_total_monthly_debt = Decimal('0')
+    dummy_dti_ratio = Decimal('0')
+    dummy_dti_percentage = Decimal('0')
+    dummy_estimated_net_monthly_income = Decimal('0')
+    dummy_loan_amount_to_annual_income_ratio = Decimal('0')
+
+    # Document-based Criteria
+    doc_criteria = {
+        'loan_purpose_document': {'weight': 5, 'notes': "Purpose of Loan Clearly Defined (Document)"},
+        'signed_deduction_agreement_document': {'weight': 15, 'notes': "Signed Deduction Agreement from Daily Savings"},
+        'valid_surety_bond_document': {'weight': 20, 'notes': "Signed Surety Bond (Valid Surety)"},
+    }
+    for field, details in doc_criteria.items():
+        if data.get(field):
+            total_score += Decimal(str(details['weight']))
+            reasons.append(f"✔ {details['notes']} (Provided, +{details['weight']}%)")
+        else:
+            reasons.append(f"✖ {details['notes']} (Not Provided, +0%)")
+
+    # KYC Fields
+    if _check_full_kyc(data):
+        total_score += Decimal('10') # Weight for Full KYC
+        reasons.append("✔ Full KYC (ID, Place of Birth, Address, etc.) Provided. (+10%)")
+    else:
+        reasons.append("✖ Full KYC (ID, Place of Birth, Address, etc.) Not Fully Provided. (+0%)")
+
+    # System-Check Criteria
+    sys_check_criteria = {
+        'daily_savings_active_ge_6_months': {'weight': 20, 'notes': "Daily Savings Active for at Least 6 Months"},
+        'positive_loan_repayment_history': {'weight': 15, 'notes': "Positive Loan Repayment History"},
+        'savings_balance_ge_1_5_loan': {'weight': 15, 'notes': f"Savings Balance ≥ {SAVINGS_BALANCE_GE_1_5_LOAN_RATIO*100:.0f}% of Loan Requested"},
+    }
+    for field, details in sys_check_criteria.items():
+        if data.get(field):
+            total_score += Decimal(str(details['weight']))
+            reasons.append(f"✔ {details['notes']} (Met, +{details['weight']}%)")
+        else:
+            reasons.append(f"✖ {details['notes']} (Not Met, +0%)")
+
+    approved_status = None
+    if total_score >= APPROVAL_THRESHOLD:
+        approved_status = True
+    elif total_score >= BOARD_REVIEW_THRESHOLD:
+        approved_status = None
+    else:
+        approved_status = False
+
+    return {
+        'score': float(total_score),
+        'approved': approved_status,
+        'reasons': reasons,
+        'monthly_payment_new_loan': float(dummy_monthly_payment),
+        'total_monthly_debt': float(dummy_total_monthly_debt),
+        'dti_ratio': float(dummy_dti_ratio),
+        'dti_percentage': float(dummy_dti_percentage),
+        'estimated_net_monthly_income': float(dummy_estimated_net_monthly_income),
+        'loan_amount_to_annual_income_ratio': float(dummy_loan_amount_to_annual_income_ratio),
+    }
+
+def appraise_standing_order_loan(data):
+    """
+    Appraises a Standing Order Loan application.
+    """
+    total_score = Decimal('0')
+    reasons = []
+
+    loan_amount = data.get('loan_amount')
+    loan_term_years = data.get('loan_term_years')
+
+    dummy_monthly_payment = Decimal('0')
+    dummy_total_monthly_debt = Decimal('0')
+    dummy_dti_ratio = Decimal('0')
+    dummy_dti_percentage = Decimal('0')
+    dummy_estimated_net_monthly_income = Decimal('0')
+    dummy_loan_amount_to_annual_income_ratio = Decimal('0')
+
+    # Document-based Criteria
+    doc_criteria = {
+        'loan_purpose_document': {'weight': 5, 'notes': "Purpose of Loan Clearly Stated & Valid (Document)"},
+    }
+    for field, details in doc_criteria.items():
+        if data.get(field):
+            total_score += Decimal(str(details['weight']))
+            reasons.append(f"✔ {details['notes']} (Provided, +{details['weight']}%)")
+        else:
+            reasons.append(f"✖ {details['notes']} (Not Provided, +0%)")
+
+    # KYC Fields
+    if _check_full_kyc(data):
+        total_score += Decimal('15') # Weight for Full KYC for Standing Order (adjusted from 10% in others)
+        reasons.append("✔ Full KYC (ID, Place of Birth, Address, etc.) Provided. (+15%)")
+    else:
+        reasons.append("✖ Full KYC (ID, Place of Birth, Address, etc.) Not Fully Provided. (+0%)")
+
+    # System-Check Criteria
+    sys_check_criteria = {
+        'standing_order_active_ge_3_months': {'weight': 30, 'notes': "Standing Order Active for ≥ 3 Months"},
+        'loan_duration_le_1_year': {'weight': 20, 'notes': "Loan Duration ≤ 1 Year (Policy Restriction)"},
+        'savings_balance_ge_1_5_loan': {'weight': 20, 'notes': f"Savings Balance ≥ {SAVINGS_BALANCE_GE_1_5_LOAN_RATIO*100:.0f}% of Loan Amount"},
+        'no_existing_default_or_delinquency': {'weight': 10, 'notes': "No Existing Default or Delinquency"},
+    }
+    for field, details in sys_check_criteria.items():
+        if data.get(field):
+            total_score += Decimal(str(details['weight']))
+            reasons.append(f"✔ {details['notes']} (Met, +{details['weight']}%)")
+        else:
+            reasons.append(f"✖ {details['notes']} (Not Met, +0%)")
+
+    approved_status = None
+    if total_score >= APPROVAL_THRESHOLD:
+        approved_status = True
+    elif total_score >= BOARD_REVIEW_THRESHOLD:
+        approved_status = None
+    else:
+        approved_status = False
+
+    return {
+        'score': float(total_score),
+        'approved': approved_status,
+        'reasons': reasons,
+        'monthly_payment_new_loan': float(dummy_monthly_payment),
+        'total_monthly_debt': float(dummy_total_monthly_debt),
+        'dti_ratio': float(dummy_dti_ratio),
+        'dti_percentage': float(dummy_dti_percentage),
+        'estimated_net_monthly_income': float(dummy_estimated_net_monthly_income),
+        'loan_amount_to_annual_income_ratio': float(dummy_loan_amount_to_annual_income_ratio),
+    }

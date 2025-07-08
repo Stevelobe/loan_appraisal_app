@@ -16,7 +16,9 @@ SECRET_KEY = 'django-insecure-*m$6$8zx3otrtq(hm8(b01xy5#w5_x4fi#+op4hy2r=8rtbzh^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '25cc-129-0-226-248.ngrok-free.app', 'ehblo.onrender.com']
+
+CSRF_TRUSTED_ORIGINS = ['https://25cc-129-0-226-248.ngrok-free.app', 'https://ehblo.onrender.com']
 
 
 # Application definition
@@ -129,3 +131,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# Media files (for uploaded documents)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # This will create a 'media' folder in your project root

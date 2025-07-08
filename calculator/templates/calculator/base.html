@@ -1,0 +1,244 @@
+{# calculator/templates/calculator/base.html #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title|default:"Mubaku Loan Appraisal" }}</title>
+    <link rel="icon" href="{% static 'images/M.png' %}" type="image/png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #e2e8f0; /* Tailwind slate-200 for main text on dark background */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden; /* Prevent horizontal scroll on small devices */
+        }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #475569; /* slate-600, darker track */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8; /* slate-400 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1; /* slate-300 */
+        }
+        /* Styles for the background image container with blur and dimmer effect */
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("{% static 'images/work.jpeg' %}"); /* Ensure this points to your dark image */
+            background-size: cover;
+            background-position: center;
+            z-index: -2;
+            filter: brightness(60%) saturate(120%); /* Dimmer and slightly more vibrant for dark theme */
+            animation: panBackground 60s infinite linear alternate; /* Subtle panning animation */
+        }
+
+        /* Keyframes for background panning animation */
+        @keyframes panBackground {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        /* Overlay for readability - a very subtle dark tint to blend with background, or remove entirely if background is dark enough */
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.1); /* Subtle dark overlay, adjust opacity as needed */
+            z-index: -1;
+        }
+
+        /* Animation for the main content to fade in */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        /* Input field styles, adapted for dark theme */
+        .field-wrapper label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #cbd5e1; /* slate-300 - this is for labels outside the white content block */
+        }
+        /* Override label color when inside the main content block (which is white) */
+        main .field-wrapper label {
+            color: #334155; /* slate-700 - dark color for labels inside white content */
+        }
+
+        .field-wrapper input[type="text"],
+        .field-wrapper input[type="email"],
+        .field-wrapper input[type="number"],
+        .field-wrapper select {
+            display: block;
+            width: 100%;
+            padding: 0.625rem 1rem; /* py-2.5 px-4 */
+            font-size: 1rem; /* text-base */
+            color: #1e293b; /* slate-800 - text in input should be dark for contrast */
+            background-color: #f8fafc; /* slate-50 - light background for input fields */
+            border: 1px solid #64748b; /* slate-500 border */
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+            transition: all 0.2s ease-in-out;
+        }
+        /* --- NEW: Darker placeholder text for input fields --- */
+        .field-wrapper input::placeholder {
+            color: #64748b; /* slate-500 - darker placeholder for better visibility */
+        }
+        .field-wrapper select:invalid {
+            color: #64748b; /* slate-500 for unselected/initial state */
+        }
+        .field-wrapper select:valid {
+            color: #1e293b; /* slate-800 for selected/valid state */
+        }
+
+        .field-wrapper input[type="file"] {
+            display: block;
+            width: 100%;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            font-size: 0.875rem; /* text-sm */
+            color: #94a3b8; /* slate-400 */
+        }
+        .field-wrapper input[type="file"]::file-selector-button {
+            margin-right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background-color: #4f46e5; /* indigo-600 */
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+        }
+        .field-wrapper input[type="file"]::file-selector-button:hover {
+            background-color: #4338ca; /* indigo-700 */
+        }
+        .field-wrapper input[type="checkbox"] {
+            height: 1.25rem;
+            width: 1.25rem;
+            color: #4f46e5; /* indigo-600 */
+            border-radius: 0.25rem;
+            border-color: #64748b; /* slate-500 */
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .field-wrapper input[type="text"]:focus,
+        .field-wrapper input[type="email"]:focus,
+        .field-wrapper input[type="number"]:focus,
+        .field-wrapper select:focus {
+            border-color: #6366f1; /* focus:border-indigo-500 */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.45); /* focus:ring-2 focus:ring-indigo-500 */
+        }
+        .animate-pulse-slight {
+            animation: pulse-slight 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-slight {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.01);
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 min-h-screen flex flex-col">
+    <div class="background-container"></div>
+    <div class="background-overlay"></div>
+
+    {# Header Section #}
+    <header class="relative z-20 bg-gradient-to-r from-indigo-900/80 to-purple-900/80 shadow-xl py-4 sm:py-6">
+        <div class="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <img src="{% static 'images/M.png' %}" alt="Mubaku Logo" class="h-10 w-auto rounded-lg shadow-md">
+                <a href="{% url 'loan_type_selection' %}" class="text-white text-2xl font-bold tracking-tight hover:text-indigo-200 transition-colors duration-200">
+                    Mubaku Loan Appraisal
+                </a>
+            </div>
+            <nav>
+                <ul class="flex flex-wrap justify-center sm:justify-end space-x-4 sm:space-x-6 text-lg">
+                    <li><a href="{% url 'loan_type_selection' %}" class="text-white hover:text-indigo-200 transition-colors duration-200 font-medium px-2 py-1 rounded-md">Home</a></li>
+                    <li><a href="{% url 'approved_loans_list' %}" class="text-white hover:text-indigo-200 transition-colors duration-200 font-medium px-2 py-1 rounded-md">Approved Loans</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    {# Main Content Area - Ensure content within this block is dark #}
+    <main class="flex-grow container mx-auto px-4 py-8 relative z-10 animate-fade-in text-slate-900"> {# Added text-slate-900 here #}
+        {% block content %}
+        {# Content from specific templates will be inserted here #}
+        {% endblock %}
+    </main>
+
+    {# Footer Section #}
+    <footer class="relative z-20 bg-gradient-to-r from-indigo-900/80 to-purple-900/80 text-white py-8 mt-12 shadow-inner">
+        <div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="col-span-1">
+                <h3 class="text-xl font-bold mb-4 text-indigo-200">Mubaku Loan Appraisal</h3>
+                <p class="text-indigo-100 text-sm">
+                    Empowering Microfinance Institutions and Credit Unions with streamlined loan appraisal and compliance.
+                </p>
+            </div>
+            <div class="col-span-1">
+                <h3 class="text-xl font-bold mb-4 text-indigo-200">Quick Links</h3>
+                <ul class="space-y-2">
+                    <li><a href="{% url 'loan_type_selection' %}" class="text-indigo-100 hover:text-white transition-colors duration-200 text-sm">Home</a></li>
+                    <li><a href="{% url 'approved_loans_list' %}" class="text-indigo-100 hover:text-white transition-colors duration-200 text-sm">Approved Loans</a></li>
+                </ul>
+            </div>
+            <div class="col-span-1">
+                <h3 class="text-xl font-bold mb-4 text-indigo-200">Contact Support</h3>
+                <ul class="space-y-2 text-sm">
+                    <li>
+                        <a href="mailto:support@mubakuhightech.com" class="text-indigo-100 hover:text-white transition-colors duration-200 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>
+                            support@mubakuhightech.com
+                        </a>
+                    </li>
+                    <li>
+                        <a href="tel:+237671487555" class="text-indigo-100 hover:text-white transition-colors duration-200 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.774a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
+                            +237 671487555
+                        </a>
+                    </li>
+                    <li class="text-indigo-100 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 9.586V6z" clip-rule="evenodd"></path></svg>
+                        Response time: Within 24 hours
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center text-sm text-indigo-300 mt-8 pt-6 border-t border-indigo-700">
+            &copy; {% now "Y" %} Mubaku High-Tech Incorporation. All rights reserved.
+        </div>
+    </footer>
+</body>
+</html>

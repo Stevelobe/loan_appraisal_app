@@ -6,7 +6,6 @@ venv/
 .env
 
 # Django
-*.sqlite3
 media/ # If you set up a media directory for user-uploaded files, it should generally be ignored
 staticfiles/ # This is your STATIC_ROOT, which will be built on deployment
 
@@ -15,6 +14,8 @@ staticfiles/ # This is your STATIC_ROOT, which will be built on deployment
 .idea/
 *.sublime-project
 *.sublime-workspace
+
+node_modules/
 
 # Operating System files
 .DS_Store
