@@ -1,90 +1,187 @@
-{# calculator/templates/calculator/appraisal_results.html #}
-{% extends 'calculator/base.html' %} {# This line would be removed if you truly didn't want the sidebar or base layout #}
+{% extends 'calculator/base.html' %}
+
+{% block title %}Appraisal Results{% endblock %}
 
 {% block content %}
-<div class="p-8 bg-white rounded-3xl shadow-2xl border border-slate-200 text-slate-900">
-    <h2 class="text-3xl font-extrabold text-slate-900 border-b-2 border-indigo-400 pb-4 mb-6 text-center">
-        Loan Appraisal Results for {{ results.loan_type }}
-    </h2>
+<div class="container mx-auto px-4 py-12">
 
-    {% if results %}
-        <div class="mb-8 p-6 rounded-2xl shadow-lg border {% if results.approved == True %}bg-green-50/70 border-green-300 text-green-900{% elif results.approved == False %}bg-red-50/70 border-red-300 text-red-900{% else %}bg-orange-50/70 border-orange-300 text-orange-900{% endif %}">
-            <h3 class="text-2xl font-bold mb-3 text-center">
-                Loan Status:
-                {% if results.approved == True %}
-                    <span class="text-green-700">APPROVED</span>
-                {% elif results.approved == False %}
-                    <span class="text-red-700">DECLINED</span>
-                {% else %}
-                    <span class="text-orange-700">FOR BOARD REVIEW</span>
-                {% endif %}
-            </h3>
-            <p class="text-lg text-center mt-2">
-                Overall Appraisal Score: <span class="font-bold text-xl">{{ results.score|floatformat:2 }}%</span>
-            </p>
-        </div>
+    {# Check if there's at least one appraised loan to display #}
+    {% if appraised_loans %}
+        {# Assuming 'appraised_loans' is a list and we want to show the first (most recent) one #}
+        {% with loan=appraised_loans.0 %}
+            <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl p-10 border border-gray-100 transform hover:shadow-2xl transition-shadow duration-300"> {# Centered and larger card for single result #}
+                <h2 class="text-4xl font-bold text-indigo-700 mb-6 text-center">{{ loan.applicant_name }}'s Application</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 text-base text-gray-600 mb-8 border-b border-gray-200 pb-6">
+                    <p><strong>Loan Type:</strong> <span class="text-gray-700">{{ loan.get_loan_type_display }}</span></p>
+                    <p class="md:col-span-2"><strong>Submission Date:</strong> {{ loan.submission_date|date:"F d, Y H:i" }}</p>
+                </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="bg-indigo-50/50 p-5 rounded-xl border border-indigo-200 shadow-md">
-                <h4 class="text-xl font-semibold text-indigo-800 mb-3 border-b border-indigo-300 pb-2">Financial Analysis</h4>
-                <p class="text-lg mb-2"><strong class="text-slate-700">New Loan Monthly Payment:</strong> <span class="font-medium">{{ results.monthly_payment_new_loan|floatformat:2 }} XAF</span></p>
-                <p class="text-lg mb-2"><strong class="text-slate-700">Total Monthly Debt:</strong> <span class="font-medium">{{ results.total_monthly_debt|floatformat:2 }} XAF</span></p>
-                <p class="text-lg mb-2"><strong class="text-slate-700">Estimated Net Monthly Income:</strong> <span class="font-medium">{{ results.estimated_net_monthly_income|floatformat:2 }} XAF</span></p>
-                <p class="text-lg mb-2"><strong class="text-slate-700">Debt-to-Income (DTI) Ratio:</strong> <span class="font-medium">{{ results.dti_ratio|floatformat:2 }} ({{ results.dti_percentage|floatformat:2 }}%)</span></p>
-                <p class="text-lg"><strong class="text-slate-700">Loan Amount to Annual Income Ratio:</strong> <span class="font-medium">{{ results.loan_amount_to_annual_income_ratio|floatformat:2 }}</span></p>
+                <div class="mb-8 p-6 rounded-2xl {% if loan.approved %}bg-green-50 text-green-800 border-green-200{% else %}bg-red-50 text-red-800 border-red-200{% endif %} border-2">
+                    <h3 class="text-2xl font-bold mb-4 text-center">Appraisal Decision:
+                        <span class="{% if loan.approved %}text-green-700{% else %}text-red-700{% endif %} ml-2 block sm:inline-block mt-2 sm:mt-0">
+                            {% if loan.approved %}Approved{% else %}Rejected{% endif %}
+                        </span>
+                    </h3>
+                    <p class="text-lg mb-3"><strong>Appraisal Score:</strong> <span class="font-semibold">{{ loan.appraisal_score|default:"N/A" }}</span></p>
+                    <p class="text-lg"><strong>Approver Comments:</strong> {{ loan.approver_comments|default:"No comments provided." }}</p>
+                    {% if loan.reasons %}
+                        <p class="text-lg mt-4"><strong>Reasons for Decision:</strong></p>
+                        <ul class="list-disc list-inside text-base pl-4 space-y-1">
+                            {% for reason in loan.reasons %}
+                                <li>{{ reason }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <h3 class="text-3xl font-semibold text-gray-800 mb-6 border-t border-gray-200 pt-6">Detailed Application Information:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 text-base text-gray-700">
+                    <p><strong>Account Number:</strong> {{ loan.account_number|default:"N/A" }}</p>
+                    <p><strong>Identity Card No.:</strong> {{ loan.identity_card_number|default:"N/A" }}</p>
+                    <p><strong>Loan Amount:</strong> {{ loan.loan_amount }} XAF</p>
+                    <p><strong>Interest Rate:</strong> {{ loan.annual_interest_rate_percent }}%</p>
+                    <p><strong>Loan Term:</strong> {{ loan.loan_term_years }} years</p>
+                    <p><strong>Gross Monthly Income:</strong> {{ loan.borrower_gross_monthly_income }} XAF</p>
+                    <p><strong>Existing Monthly Debt:</strong> {{ loan.existing_monthly_debt_payments }} XAF</p> 
+                    <p><strong>Date of Loan:</strong> {{ loan.date_of_loan|date:"F d, Y" }}</p>
+                    <p><strong>Current Location:</strong> {{ loan.current_location|default:"N/A" }}</p>
+                    <p><strong>Place of Birth:</strong> {{ loan.place_of_birth|default:"N/A" }}</p>
+                    <p><strong>Current Address:</strong> {{ loan.current_address|default:"N/A" }}</p>
+                    <p><strong>Marital Status:</strong> {{ loan.marital_status|default:"N/A" }}</p>
+                    <p><strong>Duration with MFI:</strong> {{ loan.duration_with_mfi_years|default:"N/A" }} years</p>
+                    <p><strong>Loans from Other MFIs:</strong> {{ loan.num_loans_other_mfi|default:"N/A" }}</p>
+                    <p><strong>Profession:</strong> {{ loan.profession|default:"N/A" }}</p>
+                    <p><strong>Loan Purpose:</strong> {{ loan.loan_purpose|default:"N/A" }}</p>
+
+                    {# Specific Loan Type Details #}
+                    {% if loan.loan_type == 'mortgage' and loan.mortgageloanapplication %}
+                        <h4 class="font-bold mt-6 text-xl text-indigo-700 md:col-span-2 border-t border-gray-200 pt-4">Mortgage Loan Specifics:</h4>
+                        <p><strong>Land Title Document:</strong> {% if loan.mortgageloanapplication.land_title_document %}Yes{% else %}No{% endif %}</p>
+                        {% if loan.mortgageloanapplication.legal_mortgage_agreement_document %}
+                            <p><strong>Legal Mortgage Agreement:</strong> <a href="{{ loan.mortgageloanapplication.legal_mortgage_agreement_document.url }}" target="_blank" class="text-indigo-600 hover:underline">View Document</a></p>
+                        {% else %}
+                            <p><strong>Legal Mortgage Agreement:</strong> Not provided</p>
+                        {% endif %}
+                        <p><strong>Power of Attorney:</strong> {% if loan.mortgageloanapplication.power_of_attorney_document %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Supporting Documents:</strong> {{ loan.mortgageloanapplication.supporting_documents|default:"N/A" }}</p>
+                        <p><strong>No Existing NPL:</strong> {% if loan.mortgageloanapplication.no_existing_npl %}Yes{% else %}No{% endif %}</p>
+
+                    {% elif loan.loan_type == 'salary_backed' and loan.salarybackedloanapplication %}
+                        <h4 class="font-bold mt-6 text-xl text-indigo-700 md:col-span-2 border-t border-gray-200 pt-4">Salary-Backed Loan Specifics:</h4>
+                        <p><strong>Salary Passing Union &ge; 3 Months:</strong> {% if loan.salarybackedloanapplication.salary_passing_union_ge_3_months %}Yes{% else %}No{% endif %}</p>
+                        {% if loan.salarybackedloanapplication.copy_of_effective_service_document %}
+                            <p><strong>Effective Service Document:</strong> <a href="{{ loan.salarybackedloanapplication.copy_of_effective_service_document.url }}" target="_blank" class="text-indigo-600 hover:underline">View Document</a></p>
+                        {% else %}
+                            <p><strong>Effective Service Document:</strong> Not provided</p>
+                        {% endif %}
+                        {% if loan.salarybackedloanapplication.irrevocable_salary_transfer_document %}
+                            <p><strong>Irrevocable Salary Transfer:</strong> <a href="{{ loan.salarybackedloanapplication.irrevocable_salary_transfer_document.url }}" target="_blank" class="text-indigo-600 hover:underline">View Document</a></p>
+                        {% else %}
+                            <p><strong>Irrevocable Salary Transfer:</strong> Not provided</p>
+                        {% endif %}
+                        <p><strong>Savings &ge; 1/10 Loan:</strong> {% if loan.salarybackedloanapplication.savings_ge_1_10_loan %}Yes{% else %}No{% endif %}</p>
+
+                    {% elif loan.loan_type == 'within_savings' and loan.loanwithinsavingsapplication %}
+                        <h4 class="font-bold mt-6 text-xl text-indigo-700 md:col-span-2 border-t border-gray-200 pt-4">Loan Within Savings Specifics:</h4>
+                        <p><strong>Savings Covers Loan + Interest:</strong> {% if loan.loanwithinsavingsapplication.savings_covers_loan_plus_interest %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Loan Amount Blocked in Savings:</strong> {% if loan.loanwithinsavingsapplication.loan_amount_blocked_in_savings %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>No Active Default:</strong> {% if loan.loanwithinsavingsapplication.no_active_default %}Yes{% else %}No{% endif %}</p>
+
+                    {% elif loan.loan_type == 'daily_savings' and loan.dailysavingsloanapplication %}
+                        <h4 class="font-bold mt-6 text-xl text-indigo-700 md:col-span-2 border-t border-gray-200 pt-4">Daily Savings Loan Specifics:</h4>
+                        <p><strong>Daily Savings Active &ge; 6 Months:</strong> {% if loan.dailysavingsloanapplication.daily_savings_active_ge_6_months %}Yes{% else %}No{% endif %}</p>
+                        {% if loan.dailysavingsloanapplication.signed_deduction_agreement_document %}
+                            <p><strong>Signed Deduction Agreement:</strong> <a href="{{ loan.dailysavingsloanapplication.signed_deduction_agreement_document.url }}" target="_blank" class="text-indigo-600 hover:underline">View Document</a></p>
+                        {% else %}
+                            <p><strong>Signed Deduction Agreement:</strong> Not provided</p>
+                        {% endif %}
+                        {% if loan.dailysavingsloanapplication.valid_surety_bond_document %}
+                            <p><strong>Valid Surety Bond:</strong> <a href="{{ loan.dailysavingsloanapplication.valid_surety_bond_document.url }}" target="_blank" class="text-indigo-600 hover:underline">View Document</a></p>
+                        {% else %}
+                            <p><strong>Valid Surety Bond:</strong> Not provided</p>
+                        {% endif %}
+                        <p><strong>Positive Loan Repayment History:</strong> {% if loan.dailysavingsloanapplication.positive_loan_repayment_history %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Savings Balance &ge; 1/5 Loan:</strong> {% if loan.dailysavingsloanapplication.savings_balance_ge_1_5_loan %}Yes{% else %}No{% endif %}</p>
+
+                    {% elif loan.loan_type == 'standing_order' and loan.standingorderloanapplication %}
+                        <h4 class="font-bold mt-6 text-xl text-indigo-700 md:col-span-2 border-t border-gray-200 pt-4">Standing Order Loan Specifics:</h4>
+                        <p><strong>Standing Order Active &ge; 3 Months:</strong> {% if loan.standingorderloanapplication.standing_order_active_ge_3_months %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Loan Duration &le; 1 Year:</strong> {% if loan.standingorderloanapplication.loan_duration_le_1_year %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Savings Balance &ge; 1/5 Loan:</strong> {% if loan.standingorderloanapplication.savings_balance_ge_1_5_loan %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>No Existing Default/Delinquency:</strong> {% if loan.standingorderloanapplication.no_existing_default_or_delinquency %}Yes{% else %}No{% endif %}</p>
+
+                    {% elif loan.loan_type == 'real_estate' and loan.realestateloanapplication %}
+                        <h4 class="font-bold mt-6 text-xl text-indigo-700 md:col-span-2 border-t border-gray-200 pt-4">Real Estate Loan Specifics:</h4>
+                        <p><strong>Loan Duration &ge; 10 Years:</strong> {% if loan.realestateloanapplication.loan_duration_ge_10_years %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Loan Amount &le; 10% Paid-up Capital:</strong> {% if loan.realestateloanapplication.loan_amount_le_10_percent_paid_up_capital %}Yes{% else %}No{% endif %}</p>
+                        {% if loan.realestateloanapplication.legal_mortgage_agreement_document_re %}
+                            <p><strong>Legal Mortgage Agreement (RE):</strong> <a href="{{ loan.realestateloanapplication.legal_mortgage_agreement_document_re.url }}" target="_blank" class="text-indigo-600 hover:underline">View Document</a></p>
+                        {% else %}
+                            <p><strong>Legal Mortgage Agreement (RE):</strong> Not provided</p>
+                        {% endif %}
+                        <p><strong>Land Title in Borrower's Name:</strong> {% if loan.realestateloanapplication.land_title_in_borrowers_name %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Valid Proof of Source of Income:</strong> {% if loan.realestateloanapplication.valid_proof_of_source_of_income %}Yes{% else %}No{% endif %}</p>
+
+                    {% elif loan.loan_type == 'container' and loan.containerloanapplication %}
+                        <h4 class="font-bold mt-6 text-xl text-indigo-700 md:col-span-2 border-t border-gray-200 pt-4">Container Loan Specifics:</h4>
+                        {% if loan.containerloanapplication.bill_of_lading_document %}
+                            <p><strong>Bill of Lading:</strong> <a href="{{ loan.containerloanapplication.bill_of_lading_document.url }}" target="_blank" class="text-indigo-600 hover:underline">View Document</a></p>
+                        {% else %}
+                            <p><strong>Bill of Lading:</strong> Not provided</p>
+                        {% endif %}
+                        {% if loan.containerloanapplication.custom_clearance_plan_document %}
+                            <p><strong>Custom Clearance Plan:</strong> <a href="{{ loan.containerloanapplication.custom_clearance_plan_document.url }}" target="_blank" class="text-indigo-600 hover:underline">View Document</a></p>
+                        {% else %}
+                            <p><strong>Custom Clearance Plan:</strong> Not provided</p>
+                        {% endif %}
+                        <p><strong>Savings Balance Amount:</strong> {{ loan.containerloanapplication.savings_balance_amount|default:"N/A" }} XAF</p>
+                        <p><strong>Savings Balance &ge; 1/5 Loan:</strong> {% if loan.containerloanapplication.savings_balance_ge_1_5_loan %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Valid Proof of Source of Income:</strong> {% if loan.containerloanapplication.valid_proof_of_source_of_income %}Yes{% else %}No{% endif %}</p>
+
+                    {% elif loan.loan_type == 'agricultural' and loan.agriculturalloanapplication %}
+                        <h4 class="font-bold mt-6 text-xl text-indigo-700 md:col-span-2 border-t border-gray-200 pt-4">Agricultural Loan Specifics:</h4>
+                        <p><strong>Land Personal Belonging:</strong> {% if loan.agriculturalloanapplication.is_land_personal_belonging %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Authorization of Usage:</strong> {% if loan.agriculturalloanapplication.has_authorization_of_usage %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Loan Purpose Category:</strong> {{ loan.agriculturalloanapplication.get_loan_purpose_category_display|default:"N/A" }}</p>
+                        <p><strong>Savings Balance Amount:</strong> {{ loan.agriculturalloanapplication.savings_balance_amount|default:"N/A" }} XAF</p>
+                        <p><strong>Savings Balance &ge; 1/5 Loan:</strong> {% if loan.agriculturalloanapplication.savings_balance_ge_1_5_loan %}Yes{% else %}No{% endif %}</p>
+                        {% if loan.agriculturalloanapplication.total_cost_estimate_document %}
+                            <p><strong>Total Cost Estimate:</strong> <a href="{{ loan.agriculturalloanapplication.total_cost_estimate_document.url }}" target="_blank" class="text-indigo-600 hover:underline">View Document</a></p>
+                        {% else %}
+                            <p><strong>Total Cost Estimate:</strong> Not provided</p>
+                        {% endif %}
+                        <p><strong>Valid Proof of Source of Income:</strong> {% if loan.agriculturalloanapplication.valid_proof_of_source_of_income %}Yes{% else %}No{% endif %}</p>
+
+                    {% elif loan.loan_type == 'express' and loan.expressloanapplication %}
+                        <h4 class="font-bold mt-6 text-xl text-indigo-700 md:col-span-2 border-t border-gray-200 pt-4">Express Loan Specifics:</h4>
+                        <p><strong>Salary Deducted at Source/Standing Order:</strong> {% if loan.expressloanapplication.salary_deducted_at_source_or_standing_order %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Effective Service Available:</strong> {% if loan.expressloanapplication.effective_service_available %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Clearly Valid Purpose of Loan:</strong> {% if loan.expressloanapplication.clearly_valid_purpose_of_loan %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Savings Balance Amount:</strong> {{ loan.expressloanapplication.savings_balance_amount|default:"N/A" }} XAF</p>
+                        <p><strong>Savings Balance &ge; 1/10 Loan:</strong> {% if loan.expressloanapplication.savings_balance_ge_1_10_loan %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>No Existing Delinquent Loan:</strong> {% if loan.expressloanapplication.no_existing_delinquent_loan %}Yes{% else %}No{% endif %}</p>
+                    {% endif %}
+                </div>
+
+                <div class="mt-10 text-center">
+                    <a href="{% url 'download_appraisal_pdf' pk=loan.pk %}"
+                       class="inline-flex items-center px-10 py-4 border border-transparent text-lg font-semibold rounded-full shadow-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-3 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200 ease-in-out transform hover:scale-105">
+                        <svg class="-ml-1 mr-3 h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M5 8a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2V8zm1 0a1 1 0 00-1 1v5a1 1 0 001 1h8a1 1 0 001-1V9a1 1 0 00-1-1H6zM10 3a1 1 0 011 1v2a1 1 0 11-2 0V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        Download Appraisal PDF
+                    </a>
+                </div>
             </div>
-
-            <div class="bg-gray-50/50 p-5 rounded-xl border border-gray-200 shadow-md">
-                <h4 class="text-xl font-semibold text-gray-800 mb-3 border-b border-gray-300 pb-2">Analysis & Reasons</h4>
-                <ul class="list-disc list-inside space-y-2 text-base">
-                    {% for reason in results.reasons %}
-                        <li class="{% if reason.status == 'met' %}text-green-700{% elif reason.status == 'not_met' %}text-red-700{% else %}text-slate-700{% endif %}">
-                            <span class="inline-block w-4 mr-1 text-center">
-                                {% if reason.status == 'met' %}✔{% elif reason.status == 'not_met' %}✖{% else %}ℹ️{% endif %}
-                            </span>
-                            {{ reason.description }}
-                            {% if reason.points_awarded is not None %}
-                                ({{ reason.points_awarded }} points)
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-
-        <h3 class="text-2xl font-bold text-slate-800 border-b border-slate-300 pb-3 mb-4 mt-8">Submitted Application Details</h3>
-        <div class="overflow-x-auto bg-gray-50 rounded-xl shadow-md border border-gray-200 p-5">
-            <table class="min-w-full divide-y divide-gray-300">
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for detail in results.submitted_application_details %}
-                    <tr>
-                        <td class="px-6 py-3 whitespace-nowrap text-base font-medium text-slate-700 bg-gray-50 w-1/3">
-                            {{ detail.label }}:
-                        </td>
-                        <td class="px-6 py-3 whitespace-normal text-base text-slate-800 w-2/3">
-                            {{ detail.value }}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="mt-10 text-center">
-            <a href="{% url 'loan_type_selection' %}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 ease-in-out">
-                ← Back to Main Dashboard
-            </a>
-        </div>
+        {% endwith %}
     {% else %}
-        <div class="text-center p-8 bg-orange-50/70 rounded-xl border border-orange-300 text-orange-900">
-            <p class="text-lg font-medium">No appraisal results found.</p>
-            <p class="text-sm mt-2">Please go back to the dashboard and submit a loan application.</p>
-            <div class="mt-6">
-                <a href="{% url 'loan_type_selection' %}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 ease-in-out">
-                    ← Go to Dashboard
-                </a>
-            </div>
-        </div>
+        <p class="text-center text-gray-700 text-xl py-10 rounded-xl bg-blue-50 border border-blue-200 shadow-sm">
+            <svg class="mx-auto h-12 w-12 text-blue-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            No loan appraisal results to display at this moment.
+        </p>
     {% endif %}
 </div>
 {% endblock %}

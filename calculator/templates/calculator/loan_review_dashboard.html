@@ -1,0 +1,52 @@
+{% extends 'calculator/base.html' %}
+{% load static humanize %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12 max-w-7xl">
+    <h1 class="text-4xl font-extrabold text-slate-900 mb-8 text-center border-b-4 border-indigo-500 pb-4">
+        <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-700">Loan Review Dashboard</span>
+    </h1>
+
+    <div class="bg-white rounded-3xl shadow-3xl border border-slate-100 p-8 mb-8">
+        <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-3">Loans Under Review</h2>
+
+        {% if loans_under_review %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 rounded-lg overflow-hidden">
+                <thead class="bg-indigo-500">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider rounded-tl-lg">Applicant Name</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Loan Type</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Loan Amount</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider rounded-tr-lg">Submission Date</th>
+                        {# Removed the "Actions" column header as there are no actions here now #}
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-slate-200">
+                    {% for loan in loans_under_review %}
+                    <tr class="hover:bg-purple-50 transition-colors duration-200 ease-in-out even:bg-slate-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-base font-medium text-slate-900">{{ loan.applicant_name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ loan.get_loan_type_display }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ loan.loan_amount|floatformat:2|intcomma }} XAF</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ loan.submission_date|date:"M d, Y H:i" }}</td>
+                        {# The "View Details" link has been removed as requested #}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-slate-600 text-center py-8">No loan applications currently under review.</p>
+        {% endif %}
+    </div>
+
+    <div class="flex justify-center mt-8">
+        <a href="{% url 'loan_selection' %}" class="inline-flex items-center px-6 py-3 border border-slate-300 text-base font-medium rounded-full shadow-sm text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 ease-in-out">
+            <svg class="-ml-1 mr-3 h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Loan Selection
+        </a>
+    </div>
+</div>
+{% endblock %}

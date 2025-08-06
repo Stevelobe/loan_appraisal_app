@@ -1,13 +1,18 @@
-{# calculator/templates/calculator/loan_above_savings_form.html #}
+{# calculator/templates/calculator/business_loan_form.html #}
 {% extends 'calculator/base.html' %}
 {% load static app_filters %}
 
 {% block content %}
+{# Define lists of field names as delimited strings for safer matching #}
+{% with common_fields=',applicant_name,applicant_email,loan_amount,annual_interest_rate_percent,loan_term_years,borrower_gross_monthly_income,existing_monthly_debt_payments,account_number,date_of_loan,loan_purpose,' %}
+{# ADDED 'date_of_birth' to the kyc_fields list #}
+{% with kyc_fields=',identity_card_number,place_of_birth,date_of_birth,current_address,marital_status,duration_with_mfi_years,num_loans_other_mfi,profession,current_location,' %}
+{% with business_specific_fields=',valid_source_of_income_for_repayment,land_documents_attached,savings_balance_ge_20_percent_loan,cost_estimate_provided,' %}
+
 <div class="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16">
 
-    <!-- Left Column: Input Form -->
     <div class="lg:col-span-2 p-8 bg-white rounded-3xl shadow-2xl space-y-7 border border-slate-200 transform hover:scale-[1.005] transition-all duration-300 ease-in-out text-slate-900">
-        <h2 class="text-3xl font-extrabold text-slate-900 border-b-2 border-indigo-400 pb-4 mb-4">Loan Above Savings Application Details</h2>
+        <h2 class="text-3xl font-extrabold text-slate-900 border-b-2 border-indigo-400 pb-4 mb-4">Business Loan Application Details</h2>
 
         <form method="post" class="space-y-6" enctype="multipart/form-data">
             {% csrf_token %}
@@ -15,7 +20,8 @@
             <div class="space-y-4">
                 <h3 class="text-xl font-semibold text-slate-800 border-b border-slate-300 pb-2 mb-3">Applicant & Loan Info</h3>
                 {% for field in form %}
-                    {% if field.name in "applicant_name,applicant_email,loan_amount,annual_interest_rate_percent,loan_term_years,borrower_gross_monthly_income,existing_monthly_debt_payments" %}
+                    {# Check if field name is in the 'common_fields' string, ensuring exact match with commas #}
+                    {% if ','|add:field.name|add:',' in common_fields %}
                         <div class="field-wrapper">
                             <label for="{{ field.id_for_label }}" class="block text-base font-semibold text-slate-700 mb-2">
                                 {{ field.label }}
@@ -34,11 +40,12 @@
                 {% endfor %}
             </div>
 
-            {# --- NEW KYC Input Fields --- #}
+            {# --- KYC Input Fields --- #}
             <div class="space-y-4 pt-6 border-t border-slate-200">
                 <h3 class="text-xl font-semibold text-slate-800 border-b border-slate-300 pb-2 mb-3">KYC Details</h3>
                 {% for field in form %}
-                    {% if field.name in "identity_card_number,place_of_birth,current_address,marital_status,duration_with_mfi_years,num_loans_other_mfi,profession" %}
+                    {# Check if field name is in the 'kyc_fields' string, ensuring exact match with commas #}
+                    {% if ','|add:field.name|add:',' in kyc_fields %}
                         <div class="field-wrapper">
                             <label for="{{ field.id_for_label }}" class="block text-base font-semibold text-slate-700 mb-2">
                                 {{ field.label }}
@@ -57,11 +64,12 @@
                 {% endfor %}
             </div>
 
-            {# Common Document Uploads (now only loan_purpose_document) #}
+            {# Business Loan Specific Fields & Documents #}
             <div class="space-y-4 pt-6 border-t border-slate-200">
-                <h3 class="text-xl font-semibold text-slate-800 border-b border-slate-300 pb-2 mb-3">Common Required Documents</h3>
+                <h3 class="text-xl font-semibold text-slate-800 border-b border-slate-300 pb-2 mb-3">Business Specific Details & Documents</h3>
                 {% for field in form %}
-                    {% if field.name == "loan_purpose_document" %}
+                    {# Check if field name is in the 'business_specific_fields' string, ensuring exact match with commas #}
+                    {% if ','|add:field.name|add:',' in business_specific_fields %}
                         <div class="field-wrapper">
                             <label for="{{ field.id_for_label }}" class="block text-base font-semibold text-slate-700 mb-2">
                                 {{ field.label }}
@@ -78,58 +86,38 @@
                         </div>
                     {% endif %}
                 {% endfor %}
+
+                {# Display non-field errors for custom clean method (if any) #}
+                {% if form.non_field_errors %}
+                    <div class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                        <p class="font-bold">Form Errors:</p>
+                        <ul class="list-disc list-inside">
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
             </div>
 
-            {# Loan Above Savings Specific Document Uploads & System Checks #}
-            <div class="space-y-4 pt-6 border-t border-slate-200">
-                <h3 class="text-xl font-semibold text-slate-800 border-b border-slate-300 pb-2 mb-3">Loan Above Savings Specific Documents & Checks</h3>
-                {% for field in form %}
-                    {% if field.name in "signed_deduction_agreement_document,valid_surety_bond_document" %}
-                        <div class="field-wrapper">
-                            <label for="{{ field.id_for_label }}" class="block text-base font-semibold text-slate-700 mb-2">
-                                {{ field.label }}
-                            </label>
-                            {{ field.as_widget }}
-                            {% if field.help_text %}
-                                <p class="mt-2 text-sm text-slate-500">{{ field.help_text }}</p>
-                            {% endif %}
-                            {% for error in field.errors %}
-                                <p class="mt-2 text-sm text-red-600 font-medium flex items-center">
-                                    <span class="mr-1.5 text-lg">⚠️</span> {{ error }}
-                                </p>
-                            {% endfor %}
-                        </div>
-                    {% elif field.name in "daily_savings_active_ge_6_months,positive_loan_repayment_history,savings_balance_ge_1_5_loan" %}
-                        <div class="field-wrapper flex items-center space-x-3">
-                            {{ field.as_widget }}
-                            <label for="{{ field.id_for_label }}" class="text-base font-semibold text-slate-700 cursor-pointer">
-                                {{ field.label }}
-                            </label>
-                            {% for error in field.errors %}
-                                <p class="mt-2 text-sm text-red-600 font-medium flex items-center">
-                                    <span class="mr-1.5 text-lg">⚠️</span> {{ error }}
-                                </p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                {% endfor %}
-            </div>
-
-            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-indigo-400 transition-all duration-300 ease-in-out transform hover:-translate-y-1 mt-8 flex items-center justify-center text-lg tracking-wide">
-                <span class="mr-2 text-2xl">🚀</span> Appraise Loan Above Savings
+            <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-700 hover:from-blue-700 hover:to-cyan-800 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-400 transition-all duration-300 ease-in-out transform hover:-translate-y-1 mt-8 flex items-center justify-center text-lg tracking-wide">
+                <span class="mr-2 text-2xl">📈</span> Appraise Business Loan
             </button>
         </form>
     </div>
 
-    <!-- Right Column: Appraisal Results (Initially empty, populated on POST) -->
     <div class="lg:col-span-3 space-y-10">
         {% if results %}
             {% include 'calculator/appraisal_results.html' with results=results %}
         {% else %}
             <div class="p-8 bg-white rounded-3xl shadow-2xl border border-slate-200 text-center text-slate-700 min-h-[400px] flex items-center justify-center">
-                <p class="text-xl font-medium">Submit the form to see your Loan Above Savings Appraisal Summary.</p>
+                <p class="text-xl font-medium">Submit the form to see your Business Loan Appraisal Summary.</p>
             </div>
         {% endif %}
     </div>
 </div>
+
+{% endwith %}
+{% endwith %}
+{% endwith %}
 {% endblock %}

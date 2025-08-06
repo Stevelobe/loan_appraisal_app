@@ -16,9 +16,9 @@ SECRET_KEY = 'django-insecure-*m$6$8zx3otrtq(hm8(b01xy5#w5_x4fi#+op4hy2r=8rtbzh^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '25cc-129-0-226-248.ngrok-free.app', 'ehblo.onrender.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'fd73db67c4a2.ngrok-free.app', 'ehblo.onrender.com']
 
-CSRF_TRUSTED_ORIGINS = ['https://25cc-129-0-226-248.ngrok-free.app', 'https://ehblo.onrender.com']
+CSRF_TRUSTED_ORIGINS = ['https://fd73db67c4a2.ngrok-free.app', 'https://ehblo.onrender.com']
 
 
 # Application definition
@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'calculator',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
@@ -42,6 +43,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+
 
 ROOT_URLCONF = 'loan_appraiser_project.urls'
 
@@ -134,3 +137,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Media files (for uploaded documents)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # This will create a 'media' folder in your project root
+
+# Example from loan_appraiser_project/settings.py
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/' # Or wherever you want to redirect after login
+LOGOUT_REDIRECT_URL = '/' # Or wherever you want to redirect after logout

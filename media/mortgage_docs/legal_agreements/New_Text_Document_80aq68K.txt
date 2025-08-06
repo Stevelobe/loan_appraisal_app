@@ -1,0 +1,6 @@
+
+* For the different services, all the services listed must be redirected to their main pages for complete briefing
+* When user clicks on services, all sevices should be listed there, if user wants to look for funding opportunities,
+a whatsapp link should be made available for more funding experiences
+* Each IT service should have its own different webpages where full descriptions are made available there, 
+so a link to those their main pages should be made available at the homepage of the main website

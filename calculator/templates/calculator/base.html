@@ -93,7 +93,10 @@
         .field-wrapper input[type="text"],
         .field-wrapper input[type="email"],
         .field-wrapper input[type="number"],
-        .field-wrapper select {
+        .field-wrapper input[type="date"], /* Added for date input */
+        .field-wrapper textarea, /* Added for textarea */
+        .field-wrapper select,
+        .field-wrapper input[type="password"] { /* Added for password input */
             display: block;
             width: 100%;
             padding: 0.625rem 1rem; /* py-2.5 px-4 */
@@ -106,7 +109,8 @@
             transition: all 0.2s ease-in-out;
         }
         /* --- NEW: Darker placeholder text for input fields --- */
-        .field-wrapper input::placeholder {
+        .field-wrapper input::placeholder,
+        .field-wrapper textarea::placeholder { /* Added for textarea placeholder */
             color: #64748b; /* slate-500 - darker placeholder for better visibility */
         }
         .field-wrapper select:invalid {
@@ -152,7 +156,10 @@
         .field-wrapper input[type="text"]:focus,
         .field-wrapper input[type="email"]:focus,
         .field-wrapper input[type="number"]:focus,
-        .field-wrapper select:focus {
+        .field-wrapper input[type="date"]:focus, /* Added for date input focus */
+        .field-wrapper textarea:focus, /* Added for textarea focus */
+        .field-wrapper select:focus,
+        .field-wrapper input[type="password"]:focus { /* Added for password input focus */
             border-color: #6366f1; /* focus:border-indigo-500 */
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.45); /* focus:ring-2 focus:ring-indigo-500 */
         }
@@ -167,6 +174,56 @@
                 transform: scale(1.01);
             }
         }
+
+        /* Custom styles for messages */
+        .message-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            width: 100%;
+            max-width: 400px; /* Limit width for better appearance */
+        }
+        .message {
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem; /* rounded-xl */
+            margin-bottom: 0.75rem; /* space-y-3 */
+            font-weight: 500; /* font-medium */
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            opacity: 1; /* Start fully opaque */
+            transition: opacity 0.5s ease-out; /* Smooth fade out */
+        }
+        .message.success {
+            background-color: #d1fae5; /* green-100 */
+            color: #065f46; /* green-800 */
+            border: 1px solid #34d399; /* green-400 */
+        }
+        .message.info {
+            background-color: #e0f2fe; /* blue-100 */
+            color: #1e40af; /* blue-800 */
+            border: 1px solid #60a5fa; /* blue-400 */
+        }
+        .message.warning {
+            background-color: #fffbeb; /* yellow-100 */
+            color: #92400e; /* yellow-800 */
+            border: 1px solid #fbbf24; /* yellow-400 */
+        }
+        .message.error {
+            background-color: #fee2e2; /* red-100 */
+            color: #991b1b; /* red-800 */
+            border: 1px solid #ef4444; /* red-400 */
+        }
+        .message .icon {
+            margin-right: 0.75rem; /* mr-3 */
+            font-size: 1.25rem; /* text-xl */
+        }
+
+        /* Animation for fading out messages */
+        .message.fading-out {
+            opacity: 0;
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-200 min-h-screen flex flex-col">
@@ -178,21 +235,56 @@
         <div class="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <img src="{% static 'images/M.png' %}" alt="Mubaku Logo" class="h-10 w-auto rounded-lg shadow-md">
-                <a href="{% url 'loan_type_selection' %}" class="text-white text-2xl font-bold tracking-tight hover:text-indigo-200 transition-colors duration-200">
+                <a href="{% url 'loan_selection' %}" class="text-white text-2xl font-bold tracking-tight hover:text-indigo-200 transition-colors duration-200">
                     Mubaku Loan Appraisal
                 </a>
             </div>
             <nav>
                 <ul class="flex flex-wrap justify-center sm:justify-end space-x-4 sm:space-x-6 text-lg">
-                    <li><a href="{% url 'loan_type_selection' %}" class="text-white hover:text-indigo-200 transition-colors duration-200 font-medium px-2 py-1 rounded-md">Home</a></li>
-                    <li><a href="{% url 'approved_loans_list' %}" class="text-white hover:text-indigo-200 transition-colors duration-200 font-medium px-2 py-1 rounded-md">Approved Loans</a></li>
+                    <li><a href="{% url 'loan_selection' %}" class="text-white hover:text-indigo-200 transition-colors duration-200 font-medium px-2 py-1 rounded-md">Home</a></li>
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'approved_loans_list' %}" class="text-white hover:text-indigo-200 transition-colors duration-200 font-medium px-2 py-1 rounded-md">Approved Loans</a></li>
+                        <li><a href="{% url 'loan_review_dashboard' %}" class="text-white hover:text-indigo-200 transition-colors duration-200 font-medium px-2 py-1 rounded-md">Loans Under Review</a></li>
+                        <li class="flex items-center text-indigo-200 font-medium px-2 py-1 rounded-md">
+                            Welcome, {{ user.username }}!
+                        </li>
+                        <li>
+                            <form action="{% url 'logout' %}" method="post" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="text-white bg-red-600 hover:bg-red-700 transition-colors duration-200 font-medium px-3 py-1 rounded-md">Logout</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li><a href="{% url 'login' %}" class="text-white hover:text-indigo-200 transition-colors duration-200 font-medium px-2 py-1 rounded-md">Login</a></li>
+                        <li><a href="{% url 'signup' %}" class="text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 font-medium px-3 py-1 rounded-md">Sign Up</a></li>
+                    {% endif %}
                 </ul>
             </nav>
         </div>
     </header>
 
+    {# Django Messages Display Area #}
+    <div class="message-container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message {{ message.tags }}">
+                    {% if 'success' in message.tags %}
+                        <span class="icon">✅</span>
+                    {% elif 'info' in message.tags %}
+                        <span class="icon">ℹ️</span>
+                    {% elif 'warning' in message.tags %}
+                        <span class="icon">⚠️</span>
+                    {% elif 'error' in message.tags %}
+                        <span class="icon">❌</span>
+                    {% endif %}
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
     {# Main Content Area - Ensure content within this block is dark #}
-    <main class="flex-grow container mx-auto px-4 py-8 relative z-10 animate-fade-in text-slate-900"> {# Added text-slate-900 here #}
+    <main class="flex-grow container mx-auto px-4 py-8 relative z-10 animate-fade-in text-slate-900">
         {% block content %}
         {# Content from specific templates will be inserted here #}
         {% endblock %}
@@ -210,8 +302,11 @@
             <div class="col-span-1">
                 <h3 class="text-xl font-bold mb-4 text-indigo-200">Quick Links</h3>
                 <ul class="space-y-2">
-                    <li><a href="{% url 'loan_type_selection' %}" class="text-indigo-100 hover:text-white transition-colors duration-200 text-sm">Home</a></li>
-                    <li><a href="{% url 'approved_loans_list' %}" class="text-indigo-100 hover:text-white transition-colors duration-200 text-sm">Approved Loans</a></li>
+                    <li><a href="{% url 'loan_selection' %}" class="text-indigo-100 hover:text-white transition-colors duration-200 text-sm">Home</a></li>
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'approved_loans_list' %}" class="text-indigo-100 hover:text-white transition-colors duration-200 text-sm">Approved Loans</a></li>
+                        <li><a href="{% url 'loan_review_dashboard' %}" class="text-indigo-100 hover:text-white transition-colors duration-200 text-sm">Loans Under Review</a></li>
+                    {% endif %}
                 </ul>
             </div>
             <div class="col-span-1">
@@ -240,5 +335,22 @@
             &copy; {% now "Y" %} Mubaku High-Tech Incorporation. All rights reserved.
         </div>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(message => {
+                // Set a timeout to fade out the message after 5 seconds
+                setTimeout(() => {
+                    message.classList.add('fading-out');
+                    // After fade out, remove the message from the DOM
+                    message.addEventListener('transitionend', function() {
+                        message.remove();
+                    });
+                }, 5000); // 5 seconds
+            });
+        });
+    </script>
+
 </body>
 </html>

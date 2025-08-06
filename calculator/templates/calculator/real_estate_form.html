@@ -1,0 +1,173 @@
+{# calculator/templates/calculator/real_estate_form.html #}
+{% extends 'calculator/base.html' %}
+{% load static app_filters %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16">
+
+    <!-- Left Column: Input Form -->
+    <div class="lg:col-span-2 p-8 bg-white rounded-3xl shadow-2xl space-y-7 border border-slate-200 transform hover:scale-[1.005] transition-all duration-300 ease-in-out text-slate-900">
+        <h2 class="text-3xl font-extrabold text-slate-900 border-b-2 border-indigo-400 pb-4 mb-4">Real Estate Loan Application Details</h2>
+
+        <form method="post" class="space-y-6" enctype="multipart/form-data">
+            {% csrf_token %}
+            {# General Loan Details #}
+            <div class="space-y-4">
+                <h3 class="text-xl font-semibold text-slate-800 border-b border-slate-300 pb-2 mb-3">Applicant & Loan Info</h3>
+                {% for field in form %}
+                    {# IMPORTANT FIX: Changed 'loan_purpose_document' to 'loan_purpose' #}
+                    {% if field.name in "applicant_name,applicant_email,loan_amount,annual_interest_rate_percent,loan_term_years,borrower_gross_monthly_income,existing_monthly_debt_payments,account_number,date_of_loan,loan_purpose" %}
+                        <div class="field-wrapper">
+                            <label for="{{ field.id_for_label }}" class="block text-base font-semibold text-slate-700 mb-2">
+                                {{ field.label }}
+                            </label>
+                            {{ field.as_widget }}
+                            {% if field.help_text %}
+                                <p class="mt-2 text-sm text-slate-500">{{ field.help_text }}</p>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <p class="mt-2 text-sm text-red-600 font-medium flex items-center">
+                                    <span class="mr-1.5 text-lg">⚠️</span> {{ error }}
+                                </p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+                   {# --- UPDATED KYC Input Fields --- #}
+            <div class="space-y-4 pt-6 border-t border-slate-200">
+                <h3 class="text-xl font-semibold text-slate-800 border-b border-slate-300 pb-2 mb-3">KYC Details</h3>
+                {% for field in form %}
+                    {# Added 'date_of_birth' to the list of fields to display #}
+                    {% if field.name in "identity_card_number,place_of_birth,date_of_birth,current_address,marital_status,duration_with_mfi_years,num_loans_other_mfi,profession,current_location" %}
+                        <div class="field-wrapper">
+                            <label for="{{ field.id_for_label }}" class="block text-base font-semibold text-slate-700 mb-2">
+                                {{ field.label }}
+                            </label>
+                            {{ field.as_widget }}
+                            {% if field.help_text %}
+                                <p class="mt-2 text-sm text-slate-500">{{ field.help_text }}</p>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <p class="mt-2 text-sm text-red-600 font-medium flex items-center">
+                                    <span class="mr-1.5 text-lg">⚠️</span> {{ error }}
+                                </p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            {# Real Estate Specific Documents & Checks #}
+            <div class="space-y-4 pt-6 border-t border-slate-200">
+                <h3 class="text-xl font-semibold text-slate-800 border-b border-slate-300 pb-2 mb-3">Real Estate Specific Documents & Checks</h3>
+                
+                {# File Upload: Legal Mortgage Agreement signed #}
+                <div class="field-wrapper">
+                    <label for="{{ form.legal_mortgage_agreement_document_re.id_for_label }}" class="block text-base font-semibold text-slate-700 mb-2">
+                        {{ form.legal_mortgage_agreement_document_re.label }}
+                    </label>
+                    {{ form.legal_mortgage_agreement_document_re.as_widget }}
+                    {% if form.legal_mortgage_agreement_document_re.help_text %}
+                        <p class="mt-2 text-sm text-slate-500">{{ form.legal_mortgage_agreement_document_re.help_text }}</p>
+                    {% endif %}
+                    {% for error in form.legal_mortgage_agreement_document_re.errors %}
+                        <p class="mt-2 text-sm text-red-600 font-medium flex items-center">
+                            <span class="mr-1.5 text-lg">⚠️</span> {{ error }}
+                        </p>
+                    {% endfor %}
+                </div>
+
+                {# Checkboxes #}
+                <div class="field-wrapper flex items-center space-x-3">
+                    {{ form.loan_duration_ge_10_years.as_widget }}
+                    <label for="{{ form.loan_duration_ge_10_years.id_for_label }}" class="text-base font-semibold text-slate-700 cursor-pointer">
+                        {{ form.loan_duration_ge_10_years.label }}
+                    </label>
+                    {% if form.loan_duration_ge_10_years.help_text %}
+                        <p class="mt-2 text-sm text-slate-500">{{ form.loan_duration_ge_10_years.help_text }}</p>
+                    {% endif %}
+                    {% for error in form.loan_duration_ge_10_years.errors %}
+                        <p class="mt-2 text-sm text-red-600 font-medium flex items-center">
+                            <span class="mr-1.5 text-lg">⚠️</span> {{ error }}
+                        </p>
+                    {% endfor %}
+                </div>
+
+                <div class="field-wrapper flex items-center space-x-3">
+                    {{ form.loan_amount_le_10_percent_paid_up_capital.as_widget }}
+                    <label for="{{ form.loan_amount_le_10_percent_paid_up_capital.id_for_label }}" class="text-base font-semibold text-slate-700 cursor-pointer">
+                        {{ form.loan_amount_le_10_percent_paid_up_capital.label }}
+                    </label>
+                    {% if form.loan_amount_le_10_percent_paid_up_capital.help_text %}
+                        <p class="mt-2 text-sm text-slate-500">{{ form.loan_amount_le_10_percent_paid_up_capital.help_text }}</p>
+                    {% endif %}
+                    {% for error in form.loan_amount_le_10_percent_paid_up_capital.errors %}
+                        <p class="mt-2 text-sm text-red-600 font-medium flex items-center">
+                            <span class="mr-1.5 text-lg">⚠️</span> {{ error }}
+                        </p>
+                    {% endfor %}
+                </div>
+
+                <div class="field-wrapper flex items-center space-x-3">
+                    {{ form.land_title_in_borrowers_name.as_widget }}
+                    <label for="{{ form.land_title_in_borrowers_name.id_for_label }}" class="text-base font-semibold text-slate-700 cursor-pointer">
+                        {{ form.land_title_in_borrowers_name.label }}
+                    </label>
+                    {% if form.land_title_in_borrowers_name.help_text %}
+                        <p class="mt-2 text-sm text-slate-500">{{ form.land_title_in_borrowers_name.help_text }}</p>
+                    {% endif %}
+                    {% for error in form.land_title_in_borrowers_name.errors %}
+                        <p class="mt-2 text-sm text-red-600 font-medium flex items-center">
+                            <span class="mr-1.5 text-lg">⚠️</span> {{ error }}
+                        </p>
+                    {% endfor %}
+                </div>
+
+                <div class="field-wrapper flex items-center space-x-3">
+                    {{ form.valid_proof_of_source_of_income.as_widget }}
+                    <label for="{{ form.valid_proof_of_source_of_income.id_for_label }}" class="text-base font-semibold text-slate-700 cursor-pointer">
+                        {{ form.valid_proof_of_source_of_income.label }}
+                    </label>
+                    {% if form.valid_proof_of_source_of_income.help_text %}
+                        <p class="mt-2 text-sm text-slate-500">{{ form.valid_proof_of_source_of_income.help_text }}</p>
+                    {% endif %}
+                    {% for error in form.valid_proof_of_source_of_income.errors %}
+                        <p class="mt-2 text-sm text-red-600 font-medium flex items-center">
+                            <span class="mr-1.5 text-lg">⚠️</span> {{ error }}
+                        </p>
+                    {% endfor %}
+                </div>
+
+                {# Display non-field errors for custom clean method (if any) #}
+                {% if form.non_field_errors %}
+                    <div class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                        <p class="font-bold">Form Errors:</p>
+                        <ul class="list-disc list-inside">
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-indigo-400 transition-all duration-300 ease-in-out transform hover:-translate-y-1 mt-8 flex items-center justify-center text-lg tracking-wide">
+                <span class="mr-2 text-2xl">🚀</span> Appraise Real Estate Loan
+            </button>
+        </form>
+    </div>
+
+    <!-- Right Column: Appraisal Results (Initially empty, populated on POST) -->
+    <div class="lg:col-span-3 space-y-10">
+        {% if results %}
+            {% include 'calculator/appraisal_results.html' with results=results %}
+        {% else %}
+            <div class="p-8 bg-white rounded-3xl shadow-2xl border border-slate-200 text-center text-slate-700 min-h-[400px] flex items-center justify-center">
+                <p class="text-xl font-medium">Submit the form to see your Real Estate Loan Appraisal Summary.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
