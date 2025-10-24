@@ -4,9 +4,9 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import Login from "./pages/Login";
-import LoanApplicationPage from "./pages/LoanApplicationPage";
 import LoanSelection from "./pages/LoanApplicationDashboad";
 import {Layout,  RequireAuth } from "../src/pages/Layout";
+import CobacRegulations from "./pages/Reculation";
 import HomePage from "./pages/HomePage";
 const App = () =>{
   const router = createBrowserRouter([
@@ -27,9 +27,9 @@ const App = () =>{
           element: <Login/>
         },
         {
-          path: "/apply/:loanType",
-          element: <LoanApplicationPage/>
-        },
+          path: "/regulations",
+          element: <CobacRegulations/>
+        }
       ]
     },
     // {
