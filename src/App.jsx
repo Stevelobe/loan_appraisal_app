@@ -4,32 +4,23 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
 import LoanApplicationPage from "./pages/LoanApplicationPage";
+import LoanSelection from "./pages/LoanApplicationDashboad";
 import {Layout,  RequireAuth } from "../src/pages/Layout";
+import HomePage from "./pages/HomePage";
 const App = () =>{
   const router = createBrowserRouter([
     {
       path: '/',
       element: <Layout/>,
       children:[
-        // {
-        //   path: "/",
-        //   element: <HomePage/>
-        // },
-        // {
-        //   path: "/list",
-        //   element: <ListPage/>,
-        //   loader: listPageLoader
-        // },
-        // {
-        //   path: "/:id",
-        //   element: <SinglePage/>,
-        //   loader: singlePageLoader
-        // },
+        {
+          path: "/",
+          element: <HomePage/>
+        },
         {
           path: "/dashboard",
-          element: <Dashboard/>
+          element: <LoanSelection/>
         },
         {
           path: "/login",
