@@ -20,7 +20,7 @@ const Footer = () => {
           <ul className="space-y-2">
             <li>
               <a
-                href="/loan-selection"
+                href="/"
                 className="text-indigo-100 hover:text-white transition-colors duration-200 text-sm"
               >
                 Home
@@ -29,7 +29,7 @@ const Footer = () => {
             {/* If user context is passed, you can conditionally render here */}
             <li>
               <a
-                href="/approved-loans-list"
+                href="/approved-loans"
                 className="text-indigo-100 hover:text-white transition-colors duration-200 text-sm"
               >
                 Approved Loans
@@ -37,7 +37,7 @@ const Footer = () => {
             </li>
             <li>
               <a
-                href="/loan-review-dashboard"
+                href="/loan-review"
                 className="text-indigo-100 hover:text-white transition-colors duration-200 text-sm"
               >
                 Loans Under Review

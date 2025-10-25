@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import LoanAppraisalForm from '../components/LoanAppraisalForm'
 
 const LoanSelection = ({
-  totalApprovedLoans = 0, // Default to 0 for a cleaner demo
-  loanTypes = [ // Example structure for loanTypes
-    { value: 'mortgage-loan', label: 'Mortgage Loan' },
-    { value: 'salary-loan', label: 'Salary-Backed Loan' },
+  totalApprovedLoans = 0,
+  loanTypes = [
+    // ... your 10 loan types remain here ...
+    { value: 'mortgage-loan', label: 'Mortgage Loan' }, 
+    { value: 'salary-loan', label: 'Salary-Backed Loan' }, 
     { value: 'loan-within-saving', label: 'Loan Within Savings' },
     { value: 'daily-loan', label: 'Daily Savings Loan' },
     { value: 'stading-loan', label: 'Standing Order Loan' },
@@ -14,43 +16,60 @@ const LoanSelection = ({
     { value: 'express-loan', label: 'Express Loan' },
     { value: 'business-loan', label: 'Business Loan' },
   ],
-  recentApplications = [], // Example structure for recentApplications, pass empty array if none
-  onLoanSelect, // Function to handle form submission
-  getLoanTypeDisplay = (type) => type.toUpperCase(), // Helper for display text
+  recentApplications = [],
+  // We rename onLoanSelect to something like onAppraisalStart and make it local
+  getLoanTypeDisplay = (type) => type.toUpperCase(),
 }) => {
   const [selectedLoanType, setSelectedLoanType] = useState(loanTypes.length > 0 ? loanTypes[0].value : '');
-  const [error, setError] = useState(null); // State for form error
+  const [error, setError] = useState(null);
+  // NEW STATE: To switch between selection screen and form screen
+  const [appraisalLoanType, setAppraisalLoanType] = useState(null); 
 
-  // Simple animation utility class, often added via a library like `animate.css` or defined in index.css
   const animatePulseSlight = 'animate-pulse-slight';
 
-  // Function to handle form submission
-  const handleSubmit = (e) => {
+  // Function to start the appraisal form
+  const handleAppraisalStart = (e) => {
     e.preventDefault();
     if (selectedLoanType) {
       setError(null);
-      // In a real React app, this would typically call an API or a router function.
-      onLoanSelect(selectedLoanType);
+      // Set the selected loan type to start the multi-step form
+      setAppraisalLoanType(selectedLoanType); 
     } else {
       setError('Please select a loan type before proceeding.');
     }
   };
+  
+  // Function to go back to the selection screen
+  const handleBackToSelection = () => {
+    setAppraisalLoanType(null);
+  };
 
-  // Helper function to render application status text and color
   const getStatusText = (approved) => {
     if (approved === true) return { text: 'Approved', color: 'text-green-700' };
     if (approved === false) return { text: 'Declined', color: 'text-red-700' };
     return { text: 'Review', color: 'text-yellow-700' };
   };
 
+  // Conditional Rendering: Show the form if a loan type has been selected for appraisal
+  if (appraisalLoanType) {
+    return (
+        <LoanAppraisalForm 
+            selectedLoanType={appraisalLoanType} 
+            loanTypes={loanTypes}
+            onBackToSelection={handleBackToSelection}
+        />
+    );
+  }
+
+  // Otherwise, show the loan selection screen (your original component's render)
   return (
-    // Equivalent to 'calculator/base.html' content area
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Main flex container to arrange content side-by-side */}
+      {/* Main flex container */}
       <div className="flex flex-col md:flex-row justify-center items-start gap-6 lg:gap-8">
 
         {/* --- Left Column: Loan Selection and Approved Loans Count --- */}
-        <div className="w-full md:w-1/2 lg:w-2/5 p-4 sm:p-5 bg-white rounded-xl shadow-lg space-y-5 border border-slate-200 text-slate-900 transform transition-all duration-300 ease-in-out hover:scale-[1.005]">
+        <div className="w-full md:w-1/2 lg:w-2/5 p-4 sm:p-5 bg-white rounded-xl shadow-lg space-y-5 border border-slate-200 transform transition-all duration-300 ease-in-out hover:scale-[1.005]">
+          {/* ... [Rest of your original left column content for Loans Granted, Quick Actions] ... */}
 
           {/* Page Title Section */}
           <div className="text-center pb-2 border-b-2 border-indigo-400">
@@ -94,11 +113,11 @@ const LoanSelection = ({
             </div>
           </div>
 
-          {/* Loan Type Selection Form Section */}
+
+          {/* Loan Type Selection Form Section (Uses new handler) */}
           <div className="max-w-xs mx-auto pt-3">
             <h3 className="text-base font-semibold text-slate-700 mb-2 text-center">Start a New Appraisal</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* CSRF token is not needed in a stateless React component talking to an API */}
+            <form onSubmit={handleAppraisalStart} className="space-y-4">
               <div className="field-wrapper">
                 <label htmlFor="loan_type_select" className="block text-sm font-semibold text-slate-700 mb-1">
                   Loan Type
@@ -111,14 +130,12 @@ const LoanSelection = ({
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
                   required
                 >
-                  {/* Map the loan types from props to options */}
                   {loanTypes.map((type) => (
                     <option key={type.value} value={type.value}>
                       {type.label}
                     </option>
                   ))}
                 </select>
-                {/* Error message display */}
                 {error && (
                   <p className="mt-1 text-xs text-red-600 font-medium flex items-center">
                     <span className="mr-1 text-base">⚠️</span> {error}
@@ -130,7 +147,7 @@ const LoanSelection = ({
                 type="submit"
                 className="w-full bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white font-bold py-2.5 px-4 rounded-md shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-indigo-400 transition-all duration-300 ease-in-out transform hover:-translate-y-0.5 mt-3 flex items-center justify-center text-base tracking-wide"
               >
-                <span className="mr-2 text-lg">➡️</span> Proceed
+                <span className="mr-2 text-lg">➡️</span> Proceed to Appraisal
               </button>
             </form>
           </div>
@@ -138,7 +155,7 @@ const LoanSelection = ({
         </div>
 
         {/* --- Right Column: Recent Activity/Statistics --- */}
-        <div className="w-full md:w-1/2 lg:w-3/5 p-4 sm:p-5 bg-white rounded-xl shadow-lg space-y-5 border border-slate-200 text-slate-900 transform transition-all duration-300 ease-in-out hover:scale-[1.005] md:ml-auto">
+        <div className="w-full md:w-1/2 lg:w-3/5 p-4 sm:p-5 bg-white rounded-xl shadow-lg space-y-5 border border-slate-200 transform transition-all duration-300 ease-in-out hover:scale-[1.005] md:ml-auto">
           <div className="text-center pb-2 border-b-2 border-green-400">
             <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 leading-tight">
               Recent Application Activity
@@ -155,11 +172,9 @@ const LoanSelection = ({
                 {recentApplications.map((app, index) => {
                   const status = getStatusText(app.approved);
                   return (
-                    // Assuming 'id' is a unique key for list items in a real app
                     <li key={index} className="p-3 bg-green-50/50 rounded-lg border border-green-200 flex items-center justify-between shadow-sm">
                       <div>
                         <p className="font-semibold text-slate-800 text-base">{app.applicant_name}</p>
-                        {/* Assuming loan_amount is a number and app.loan_type is a string/value */}
                         <p className="text-sm text-slate-600">
                           {getLoanTypeDisplay(app.loan_type)} - {app.loan_amount.toLocaleString('en-US')} XAF
                         </p>
@@ -191,13 +206,3 @@ const LoanSelection = ({
 };
 
 export default LoanSelection;
-
-// NOTE: You would typically define a slight pulse animation in your global CSS (e.g., index.css or a dedicated stylesheet).
-// For example:
-// @keyframes pulse-slight {
-//   0%, 100% { transform: scale(1); }
-//   50% { transform: scale(1.005); }
-// }
-// .animate-pulse-slight {
-//   animation: pulse-slight 3s infinite ease-in-out;
-// }

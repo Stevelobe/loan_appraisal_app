@@ -21,18 +21,26 @@ const Navbar =()=>{
           <ul className="flex flex-wrap justify-center sm:justify-end space-x-4 sm:space-x-6 text-lg">
             <li>
               <a
-                href="/loan-selection"
+                href="/"
                 className="text-white hover:text-indigo-200 transition-colors duration-200 font-medium px-2 py-1 rounded-md"
               >
                 Home
               </a>
             </li>
 
+            <li>
+              <a
+                href="/dashboard"
+                className="text-white hover:text-indigo-200 transition-colors duration-200 font-medium px-2 py-1 rounded-md"
+              >
+                Dashboard
+              </a>
+            </li>
             
               <>
                 <li>
                   <a
-                    href="/approved-loans-list"
+                    href="/approved-loans"
                     className="text-white hover:text-indigo-200 transition-colors duration-200 font-medium px-2 py-1 rounded-md"
                   >
                     Approved Loans
@@ -40,7 +48,7 @@ const Navbar =()=>{
                 </li>
                 <li>
                   <a
-                    href="/loan-review-dashboard"
+                    href="/loan-review"
                     className="text-white hover:text-indigo-200 transition-colors duration-200 font-medium px-2 py-1 rounded-md"
                   >
                     Loans Under Review

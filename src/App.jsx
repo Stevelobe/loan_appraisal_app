@@ -6,6 +6,8 @@ import {
 import Login from "./pages/Login";
 import LoanSelection from "./pages/LoanApplicationDashboad";
 import {Layout,  RequireAuth } from "../src/pages/Layout";
+import ApprovedLoansOverview from "./pages/ApprovedLoans";
+import LoanReviewDashboard from "./pages/LoanUnderReview";
 import CobacRegulations from "./pages/Reculation";
 import HomePage from "./pages/HomePage";
 const App = () =>{
@@ -29,6 +31,14 @@ const App = () =>{
         {
           path: "/regulations",
           element: <CobacRegulations/>
+        },
+        {
+          path: "/approved-loans",
+          element: <ApprovedLoansOverview/>
+        },
+        {
+          path: "/loan-review",
+          element: <LoanReviewDashboard/>
         }
       ]
     },
