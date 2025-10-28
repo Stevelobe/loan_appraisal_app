@@ -9,6 +9,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('Authentication.urls')),
     path('api/calculator/', include('calculator.urls')), # Include app's URLs at the root
+    path('api/credit-unions/', include('credit_unions.urls')),
 ]
 
 # Serve media files in development

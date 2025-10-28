@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'calculator',
     'Authentication',
+    'credit_unions',
     'django.contrib.humanize',
 ]
 
