@@ -253,10 +253,10 @@ class ContainerLoanApplication(LoanApplication):
         return f"Container: {self.applicant_name} - {self.loan_amount} XAF"
 
 class AgriculturalLoanApplication(LoanApplication):
-    LOAN_PURPOSE_CHOICES = [
-        ('crops', 'Crops (e.g., maize, cassava, cocoa)'),
-        ('livestock', 'Livestock (e.g., cattle, poultry, pigs)'),
-    ]
+    # LOAN_PURPOSE_CHOICES = [
+    #     ('crops', 'Crops (e.g., maize, cassava, cocoa)'),
+    #     ('livestock', 'Livestock (e.g., cattle, poultry, pigs)'),
+    # ]
 
     is_land_personal_belonging = models.BooleanField(
         default=False,
@@ -268,7 +268,7 @@ class AgriculturalLoanApplication(LoanApplication):
     )
     loan_purpose_category = models.CharField(
         max_length=50,
-        choices=LOAN_PURPOSE_CHOICES,
+        # choices=LOAN_PURPOSE_CHOICES,
         blank=True,
         null=True,
         help_text="Select the primary purpose of this agricultural loan."

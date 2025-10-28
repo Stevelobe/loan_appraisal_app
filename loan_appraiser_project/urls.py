@@ -8,7 +8,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('Authentication.urls')),
-    path('', include('calculator.urls')), # Include app's URLs at the root
+    path('api/calculator/', include('calculator.urls')), # Include app's URLs at the root
 ]
 
 # Serve media files in development
