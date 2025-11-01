@@ -5,22 +5,22 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { FaSignInAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
 // import { ToastContainer, toast } from "react-toastify";
-// import apiRequest from '../lib/apiRequest';
-// import {AuthContext} from '../context/AuthContext'
+import apiRequest from '../lib/apiRequest';
+import {AuthContext} from '../context/AuthContext'
 import { Link, useNavigate } from 'react-router-dom';
-// import { ACCESS_TOKEN, REFRESH_TOKEN } from '../lib/constants';
+import { ACCESS_TOKEN, REFRESH_TOKEN } from '../lib/constants';
 
 const schema = yup.object().shape({
   name: yup.string().required("Username is required."),
   password: yup.string().required("Password is required."),
 });
 
-const LoginForm = ({ onLogin }) => {
+const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState()
     const [isLoading, setIsLoading] = useState(false)
     const navigate = useNavigate()
-    // const {updateUser} = useContext(AuthContext)
+    const {updateUser} = useContext(AuthContext)
   const {
     register,
     handleSubmit,
@@ -31,23 +31,23 @@ const LoginForm = ({ onLogin }) => {
   });
 
   const onSubmit = async (e) => {
-        // setIsLoading(true)
-        // const username = e.name
-        // const password = e.password
-        // try{
-        //     const res = await apiRequest.post("/auth/login/", {
-        //         username,password
-        //     })
-        //     localStorage.setItem(ACCESS_TOKEN, res.data.access)
-        //     localStorage.setItem(REFRESH_TOKEN, res.data.refresh)
-        //     updateUser(res.data)
-        //     navigate("/dashboard")
-        // }catch(err){
-        //     //console.log(err.response?.data)
-        //     setError(err.response?.data?.detail)  
-        // }finally{
-        //     setIsLoading(false)
-        // }
+        setIsLoading(true)
+        const username = e.name
+        const password = e.password
+        try{
+            const res = await apiRequest.post("/auth/login/", {
+                username,password
+            })
+            localStorage.setItem(ACCESS_TOKEN, res.data.access)
+            localStorage.setItem(REFRESH_TOKEN, res.data.refresh)
+            updateUser(res.data)
+            navigate("/dashboard")
+        }catch(err){
+            //console.log(err.response?.data)
+            setError(err.response?.data?.detail)  
+        }finally{
+            setIsLoading(false)
+        }
   };
   
   const togglePasswordVisibility = () => {
@@ -110,10 +110,7 @@ const LoginForm = ({ onLogin }) => {
             Se connecter
           </button>
         </form>
-        <div className="text-center py-4 bg-slate-100 text-slate-600 rounded-b-xl">
-            {/* You can add links here, e.g., */}
-            <a href="/register" className="hover:text-indigo-600 transition">Need an account? Sign Up</a>
-          </div>
+        
       </div>
     </div>
   );
