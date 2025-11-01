@@ -10,21 +10,6 @@ const StepThreeContainer = () => {
       
       {/* Document and Data Entry Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* File Upload 1: Copy of Bill of Lading */}
-        <FormField 
-          name="bill_of_lading_document" 
-          label="Copy of Bill of Lading" 
-          type="file" 
-          helpText="Upload the shipping document proving ownership and transport."
-        />
-
-        {/* File Upload 2: Custom Clearance Plan */}
-        <FormField 
-          name="custom_clearance_plan_document" 
-          label="Custom Clearance Plan Document" 
-          type="file" 
-          helpText="Upload the plan detailing the customs clearance process."
-        />
 
         {/* Input Field: Savings Balance Amount */}
         <FormField 
@@ -39,10 +24,21 @@ const StepThreeContainer = () => {
       {/* Internal Checks Section */}
       <div className="pt-4 space-y-4 border-t border-slate-200">
         <h4 className="text-xl font-semibold text-slate-700 pb-2">Internal Confirmation Checks</h4>
-        
+        <FormField 
+          name="bill_of_lading_document" 
+          label="Copy of Bill of Lading" 
+          type="checkbox" 
+          helpText="Is the shipping document proving ownership and transport valid ?."
+        />
+         <FormField 
+          name="custom_clearance_plan_document" 
+          label="Custom Clearance Plan Document" 
+          type="checkbox" 
+          helpText="Is the plan detailing the customs clearance process valid ?"
+        />
         {/* Checkbox 1: Savings Balance >= 1/5 of Loan Requested */}
         <FormField 
-            name="savings_balance_ge_1_5_loan_check" 
+            name="savings_balance_ge_1_5_loan" 
             label="Savings balance is ≥ 1/5 (20%) of the requested loan amount" 
             type="checkbox" 
             helpText="Confirm the required minimum savings balance for collateral."
@@ -50,7 +46,7 @@ const StepThreeContainer = () => {
         
         {/* Checkbox 2: Valid Proof of Source of Income */}
         <FormField 
-            name="valid_proof_of_source_of_income_check_container" 
+            name="valid_proof_of_source_of_income" 
             label="Valid proof of source of income has been verified" 
             type="checkbox" 
             helpText="Confirm the ability of the borrower to service the loan."

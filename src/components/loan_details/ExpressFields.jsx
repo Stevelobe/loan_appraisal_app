@@ -14,7 +14,7 @@ const StepThreeExpress = () => {
         
         {/* Checkbox 1: Salary deducted at source or standing order available */}
         <FormField 
-            name="salary_deducted_at_source_or_standing_order_check" 
+            name="salary_deducted_at_source_or_standing_order" 
             label="Salary deduction at source or standing order for repayment is confirmed" 
             type="checkbox" 
             helpText="Verify the automated mechanism for loan repayment."
@@ -22,7 +22,7 @@ const StepThreeExpress = () => {
         
         {/* Checkbox 2: Effective service available */}
         <FormField 
-            name="effective_service_available_check" 
+            name="effective_service_available" 
             label="Applicant has an 'effective service' (e.g., active account history) available" 
             type="checkbox" 
             helpText="Confirm the applicant's account history meets the service criteria."
@@ -30,7 +30,7 @@ const StepThreeExpress = () => {
 
         {/* Checkbox 3: Is there a clearly/valid purpose of loan */}
         <FormField 
-            name="clearly_valid_purpose_of_loan_check" 
+            name="clearly_valid_purpose_of_loan" 
             label="Loan has a clearly defined and valid purpose" 
             type="checkbox" 
             helpText="Confirm the intended use of the funds is acceptable."
@@ -38,7 +38,7 @@ const StepThreeExpress = () => {
         
         {/* Checkbox 4: Savings balance must be 1/10 or 10% of loan amount */}
         <FormField 
-            name="savings_balance_ge_1_10_loan_check" 
+            name="savings_balance_ge_1_10_loan" 
             label="Savings balance is ≥ 1/10 (10%) of the requested loan amount" 
             type="checkbox" 
             helpText="Confirm the required minimum savings balance for express collateral."
@@ -46,7 +46,7 @@ const StepThreeExpress = () => {
 
         {/* Checkbox 5: No existing delinquent loan */}
         <FormField 
-            name="no_existing_delinquent_loan_check" 
+            name="no_existing_delinquent_loan" 
             label="Applicant has no existing delinquent loans" 
             type="checkbox" 
             helpText="Confirm the applicant's recent credit repayment status."
@@ -57,7 +57,7 @@ const StepThreeExpress = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
         {/* Text Field: Savings Balance Amount */}
         <FormField 
-          name="savings_balance_amount_express" 
+          name="savings_balance_amount" 
           label="Current Savings Balance (XAF)" 
           type="number" 
           placeholder="e.g., 50000"

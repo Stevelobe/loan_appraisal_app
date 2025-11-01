@@ -166,6 +166,7 @@ const ApprovedLoansOverview = ({
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Loan Term (Years)</th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Submission Date</th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider rounded-tr-xl">Actions</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider rounded-tr-xl">Detail</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-slate-200">
@@ -193,6 +194,7 @@ const ApprovedLoansOverview = ({
                                             {/* Replace Django URL with a hardcoded or prop-provided route */}
                                             <a href={`/download-appraisal-pdf/${loan.pk}`} className="text-indigo-600 hover:text-indigo-900 mr-4 transition-colors duration-150 ease-in-out">Download PDF</a>
                                         </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 cursor-pointer">View detail</td>
                                     </tr>
                                 ))}
                             </tbody>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-const FormField = ({ name, label, type = 'text', helpText, ...props }) => {
+const FormField = ({ name, label, type = 'text', helpText,options=[], ...props }) => {
   const { register, formState: { errors } } = useFormContext();
   const error = errors[name];
 
@@ -13,21 +13,27 @@ const FormField = ({ name, label, type = 'text', helpText, ...props }) => {
   // Helper for input type
   const renderInput = () => {
       if (type === 'select') {
-          // ... (Your existing select logic remains here)
-          return (
-             <select 
-                 id={name} 
-                 {...register(name)} 
-                 className={`${baseClass} ${errorClass}`}
-                 {...props}
-             >
-                 <option value="">Select an Option</option>
-                 <option value="Personal">Personal</option>
-                 <option value="Business">Business</option>
-                 <option value="Other">Other</option>
-             </select>
-          );
-      }
+            return (
+                <select 
+                    id={name} 
+                    {...register(name)} 
+                    className={`${baseClass} ${errorClass}`}
+                    {...props}
+                >
+                    {/* 1. Default/Placeholder Option */}
+                    <option value="">Select an Option</option>
+                    
+                    {/* 2. Dynamically Render Options using the passed 'options' prop */}
+                    {options.map((option) => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+
+                    {/* REMOVED: The hardcoded options (Personal, Business, Other) are gone. */}
+                </select>
+            );
+        }
       
       if (type === 'textarea') {
           return (
@@ -116,7 +122,12 @@ const FormField = ({ name, label, type = 'text', helpText, ...props }) => {
   );
 };
 
-
+const purposeOptions = [
+  { value: '', label: 'Select A Loan Purpose' },
+  { value: 'business', label: 'Business' },
+  { value: 'personal', label: 'Personal' },
+  { value: 'other', label: 'other' },
+];
 const StepOne = () => {
   return (
     <div className="space-y-6">
@@ -137,7 +148,7 @@ const StepOne = () => {
           <FormField name="account_number" label="Account Number" />
 
           <FormField name="date_of_loan" label="Date of Loan Application" type="date" />
-          <FormField name="loan_purpose" label="Loan Purpose" type="select">
+          <FormField name="loan_purpose" label="Loan Purpose" type="select" options={purposeOptions}>
               {/* Options will be inside the FormField select block, as shown in its implementation */}
           </FormField>
       </div>

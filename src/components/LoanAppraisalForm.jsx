@@ -54,7 +54,7 @@ const stepFourConfirmationSchema = yup.object().shape({});
 // Combine schemas for all steps
 const validationSchema = [stepOneSchema, stepTwoSchema, stepThreeMortgageSchema, stepThreeSalarySchema, stepThreeSavingsSchema,
   stepThreeDailySchema, stepThreeStandingOrderSchema, stepThreeRealEstateSchema, stepThreeAgriculturalSchema, 
-  stepThreeExpressSchema, stepThreeBusinessSchema];
+  stepThreeExpressSchema, stepThreeBusinessSchema, stepFourConfirmationSchema];
 const getValidationSchema = (loanType) => {
     // Basic steps common to all loans
     const schemas = [stepOneSchema, stepTwoSchema]; 
@@ -125,7 +125,7 @@ const LoanAppraisalForm = ({ selectedLoanType, loanTypes, onBackToSelection }) =
         console.log("Ready for final submission on Step 4.");
       }
     } else {
-        console.error("Validation Errors:", errors);
+        console.log("Validation Errors:", errors);
     }
   }, [currentStep, totalSteps, trigger, getValues, formData, errors]);
 
@@ -188,7 +188,7 @@ const LoanAppraisalForm = ({ selectedLoanType, loanTypes, onBackToSelection }) =
   // Locate the handleSubmit function and replace the final submission logic:
 
 const handleFinalSubmit = async (values) => {
-  console.log('pop')
+  console.log(values)
     // // Check if we are on the final confirmation step
     // if (currentStep < MAX_STEPS) {
     //     // This should not happen if the Next button logic is correct, but good for safety

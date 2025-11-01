@@ -13,7 +13,7 @@ const StepThreeStandingOrder = () => {
         
         {/* Checkbox 1: Standing Order Active >= 3 Months */}
         <FormField 
-            name="standing_order_active_ge_3_months_check" 
+            name="standing_order_active_ge_3_months" 
             label="Standing Order has been active for ≥ 3 months" 
             type="checkbox" 
             helpText="Verify the consistency of the standing order payments."
@@ -21,7 +21,7 @@ const StepThreeStandingOrder = () => {
         
         {/* Checkbox 2: Loan Duration <= 1 Year */}
         <FormField 
-            name="loan_duration_le_1_year_check" 
+            name="loan_duration_le_1_year" 
             label="Loan duration is ≤ 1 year (12 months)" 
             type="checkbox" 
             helpText="Confirm loan duration is within the approved short-term limit."
@@ -29,7 +29,7 @@ const StepThreeStandingOrder = () => {
 
         {/* Checkbox 3: Savings Balance >= 1/5 of Loan Requested */}
         <FormField 
-            name="savings_balance_ge_1_5_loan_check" 
+            name="savings_balance_ge_1_5_loan" 
             label="Savings balance is ≥ 1/5 (20%) of the requested loan amount" 
             type="checkbox" 
             helpText="Confirm the required minimum savings balance for partial collateral."
@@ -37,7 +37,7 @@ const StepThreeStandingOrder = () => {
         
         {/* Checkbox 4: No Existing Default or Delinquency */}
         <FormField 
-            name="no_existing_default_or_delinquency_check" 
+            name="no_existing_default_or_delinquency" 
             label="Applicant has no existing default or delinquency record" 
             type="checkbox" 
             helpText="Confirm the applicant's credit history is clean."

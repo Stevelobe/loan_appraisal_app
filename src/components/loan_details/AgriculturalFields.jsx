@@ -30,29 +30,26 @@ const StepThreeAgricultural = () => {
 
         {/* Input Field: Savings Balance Amount */}
         <FormField 
-          name="savings_balance_amount_agri" // Use a unique name to prevent collisions
+          name="savings_balance_amount" // Use a unique name to prevent collisions
           label="Current Savings Balance (XAF)" 
           type="number" 
           placeholder="e.g., 500000"
           helpText="Enter the member's current savings balance."
-        />
-
-        {/* File Upload: Total cost estimate of products and input */}
-        <FormField 
-          name="total_cost_estimate_document" 
-          label="Total Cost Estimate Document" 
-          type="file" 
-          helpText="Upload the detailed budget for products and inputs."
         />
       </div>
       
       {/* Internal Checks Section */}
       <div className="pt-4 space-y-4 border-t border-slate-200">
         <h4 className="text-xl font-semibold text-slate-700 pb-2">Internal Confirmation Checks</h4>
-        
+        <FormField 
+          name="total_cost_estimate_document" 
+          label="Total Cost Estimate Document" 
+          type="checkbox" 
+          helpText="Is the detailed budget for products and inputs valid ?"
+        />
         {/* Checkbox 1: Is the land a personal belonging */}
         <FormField 
-            name="is_land_personal_belonging_check" 
+            name="is_land_personal_belonging" 
             label="Agricultural land is verified as the borrower's personal property" 
             type="checkbox" 
             helpText="Verify land ownership for collateral assessment."
@@ -60,7 +57,7 @@ const StepThreeAgricultural = () => {
         
         {/* Checkbox 2: Authorization of usage (conditionally required) */}
         <FormField 
-            name="has_authorization_of_usage_check" 
+            name="has_authorization_of_usage" 
             label="Authorization of land usage has been confirmed (if not owned by applicant)" 
             type="checkbox" 
             helpText="Required if the land is not the borrower's personal property."
@@ -68,7 +65,7 @@ const StepThreeAgricultural = () => {
 
         {/* Checkbox 3: Savings balance must be 1/5 or 20% of the loan amount */}
         <FormField 
-            name="savings_balance_ge_1_5_loan_check_agri" // Use a unique name
+            name="savings_balance_ge_1_5_loan" // Use a unique name
             label="Savings balance is ≥ 1/5 (20%) of the requested loan amount" 
             type="checkbox" 
             helpText="Confirm minimum savings balance requirement."
@@ -76,7 +73,7 @@ const StepThreeAgricultural = () => {
         
         {/* Checkbox 4: Valid proof of source of income */}
         <FormField 
-            name="valid_proof_of_source_of_income_check_agri" // Use a unique name
+            name="valid_proof_of_source_of_income" // Use a unique name
             label="Valid proof of non-farm source of income has been verified (if required)" 
             type="checkbox" 
             helpText="Confirm supplemental income for risk mitigation."

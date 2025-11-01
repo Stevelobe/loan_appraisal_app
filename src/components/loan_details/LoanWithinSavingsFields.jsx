@@ -13,7 +13,7 @@ const StepThreeSavings = () => {
         
         {/* Checkbox 1: Savings Covers Loan Plus Interest */}
         <FormField 
-            name="savings_covers_loan_plus_interest_check" 
+            name="savings_covers_loan_plus_interest" 
             label="Savings balance fully covers the requested loan amount PLUS interest" 
             type="checkbox" 
             helpText="This is the primary security check for this loan type."
@@ -21,7 +21,7 @@ const StepThreeSavings = () => {
         
         {/* Checkbox 2: Loan Amount Blocked in Savings */}
         <FormField 
-            name="loan_amount_blocked_in_savings_check" 
+            name="loan_amount_blocked_in_savings" 
             label="Loan principal amount has been blocked in the member's savings account" 
             type="checkbox" 
             helpText="Confirm a hold has been placed on the necessary savings amount."
@@ -29,7 +29,7 @@ const StepThreeSavings = () => {
 
         {/* Checkbox 3: No Active Default */}
         <FormField 
-            name="no_active_default_check" 
+            name="no_active_default" 
             label="Applicant has no active default record with the MFI" 
             type="checkbox" 
             helpText="Confirm the applicant is in good standing before approval."

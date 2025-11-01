@@ -1,7 +1,13 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormField } from './StepOne'; // Reusing the Field component from StepOne
-
+const purposeOptions = [
+  { value: '', label: 'Select A Marital Status' },
+  { value: 'single', label: 'Single' },
+  { value: 'married', label: 'Married' },
+  { value: 'divorced', label: 'Divorced' },
+  { value: 'widowed', label: 'Widowed' },
+];
 const StepTwo = () => {
   return (
     <div className="space-y-6 pt-6 border-t border-slate-200">
@@ -15,13 +21,8 @@ const StepTwo = () => {
         <FormField name="place_of_birth" label="Place of Birth" />
         <FormField name="current_address" label="Current Address" helpText="Full street address, city, and country." />
 
-        <FormField name="marital_status" label="Marital Status" type="select">
-            {/* Hardcode a simple select for demo */}
-            <option value="">Select Status</option>
-            <option value="Single">Single</option>
-            <option value="Married">Married</option>
-            <option value="Divorced">Divorced</option>
-            <option value="Widowed">Widowed</option>
+        <FormField name="marital_status" label="Marital Status" type="select" options={purposeOptions}>
+      
         </FormField>
         <FormField name="profession" label="Profession/Occupation" />
 
