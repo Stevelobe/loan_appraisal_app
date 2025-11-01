@@ -431,6 +431,7 @@ class LoanApplicationSerializer(serializers.ModelSerializer):
             'user', 
             'applicant_name',
             'applicant_email',
+            'credit_union',
             'loan_type',
             'loan_type_display', # Include the optional display field
             'loan_amount',

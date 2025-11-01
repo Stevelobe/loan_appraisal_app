@@ -74,8 +74,10 @@ class MortgageLoanAppraisalView(APIView):
                 'borrower_gross_monthly_income': validated_data.get('borrower_gross_monthly_income'),
                 'existing_monthly_debt_payments': validated_data.get('existing_monthly_debt_payments'),
                 
+                # # File/Boolean fields: check presence of file or boolean value
+                # 'legal_mortgage_agreement_document': bool(validated_data.get('legal_mortgage_agreement_document')),
                 # File/Boolean fields: check presence of file or boolean value
-                'legal_mortgage_agreement_document': bool(validated_data.get('legal_mortgage_agreement_document')),
+                'legal_mortgage_agreement_document': validated_data.get('legal_mortgage_agreement_document', False),
                 'land_title_document': validated_data.get('land_title_document', False),
                 'power_of_attorney_document': validated_data.get('power_of_attorney_document', False),
                 'supporting_documents': validated_data.get('supporting_documents', False),
@@ -151,8 +153,8 @@ class SalaryBackedLoanApplicationView(APIView):
                 'existing_monthly_debt_payments': validated_data.get('existing_monthly_debt_payments'),
                 
                 # File/Boolean fields: check presence of file or boolean value
-                'copy_of_effective_service_document': bool(validated_data.get('copy_of_effective_service_document')),
-                'irrevocable_salary_transfer_document': bool(validated_data.get('irrevocable_salary_transfer_document')),
+                'copy_of_effective_service_document': validated_data.get('copy_of_effective_service_document', False),
+                'irrevocable_salary_transfer_document': validated_data.get('irrevocable_salary_transfer_document', False),
                 'salary_passing_union_ge_3_months': validated_data.get('salary_passing_union_ge_3_months', False),
                 'savings_ge_1_10_loan': validated_data.get('savings_ge_1_10_loan', False),
                 
@@ -300,8 +302,8 @@ class DailySavingsLoanApplicationView(APIView):
                 'existing_monthly_debt_payments': validated_data.get('existing_monthly_debt_payments'),
                 
                 # File/Boolean fields: check presence of file or boolean value
-                'signed_deduction_agreement_document': bool(validated_data.get('signed_deduction_agreement_document')),
-                'valid_surety_bond_document': bool(validated_data.get('valid_surety_bond_document')),
+                'signed_deduction_agreement_document': validated_data.get('signed_deduction_agreement_document', False),
+                'valid_surety_bond_document': validated_data.get('valid_surety_bond_document', False),
                 'daily_savings_active_ge_6_months': validated_data.get('daily_savings_active_ge_6_months', False),
                 'positive_loan_repayment_history': validated_data.get('positive_loan_repayment_history', False),
                 'savings_balance_ge_1_5_loan': validated_data.get('savings_balance_ge_1_5_loan', False),
@@ -451,7 +453,7 @@ class RealEstateLoanApplicationView(APIView):
                 'existing_monthly_debt_payments': validated_data.get('existing_monthly_debt_payments'),
                 
                 # File/Boolean fields: check presence of file or boolean value
-                'legal_mortgage_agreement_document_re': bool(validated_data.get('legal_mortgage_agreement_document_re')),
+                'legal_mortgage_agreement_document_re': validated_data.get('legal_mortgage_agreement_document_re', False),
                 'loan_duration_ge_10_years': validated_data.get('loan_duration_ge_10_years', False),
                 'loan_amount_le_10_percent_paid_up_capital': validated_data.get('loan_amount_le_10_percent_paid_up_capital', False),
                 'land_title_in_borrowers_name': validated_data.get('land_title_in_borrowers_name', False),
@@ -527,8 +529,8 @@ class ContainerLoanApplicationView(APIView):
                 'existing_monthly_debt_payments': validated_data.get('existing_monthly_debt_payments'),
                 
                 # File/Boolean fields: check presence of file or boolean value
-                'custom_clearance_plan_document': bool(validated_data.get('custom_clearance_plan_document')),
-                'bill_of_lading_document': bool(validated_data.get('bill_of_lading_document')),
+                'custom_clearance_plan_document': validated_data.get('custom_clearance_plan_document', False),
+                'bill_of_lading_document': validated_data.get('bill_of_lading_document', False),
                 'savings_balance_amount': validated_data.get('savings_balance_amount', False),
                 'savings_balance_ge_1_5_loan': validated_data.get('savings_balance_ge_1_5_loan', False),
                 'valid_proof_of_source_of_income': validated_data.get('valid_proof_of_source_of_income', False),
@@ -603,7 +605,7 @@ class AgriculturalLoanApplicationView(APIView):
                 'existing_monthly_debt_payments': validated_data.get('existing_monthly_debt_payments'),
                 
                 # File/Boolean fields: check presence of file or boolean value
-                'total_cost_estimate_document': bool(validated_data.get('total_cost_estimate_document')),
+                'total_cost_estimate_document': validated_data.get('total_cost_estimate_document', False),
                 'is_land_personal_belonging': validated_data.get('is_land_personal_belonging', False),
                 'has_authorization_of_usage': validated_data.get('has_authorization_of_usage', False),
                 'loan_purpose_category': validated_data.get('loan_purpose_category'),
@@ -759,7 +761,7 @@ class BusinessLoanApplicationView(APIView):
                 'existing_monthly_debt_payments': validated_data.get('existing_monthly_debt_payments'),
                 
                 # File/Boolean fields: check presence of file or boolean value
-                'land_documents_attached': bool(validated_data.get('land_documents_attached')),
+                'land_documents_attached': validated_data.get('land_documents_attached', False),
                 'valid_source_of_income_for_repayment': validated_data.get('valid_source_of_income_for_repayment', False),
                 'savings_balance_ge_20_percent_loan': validated_data.get('savings_balance_ge_20_percent_loan', False),
                 'cost_estimate_provided': validated_data.get('cost_estimate_provided'),

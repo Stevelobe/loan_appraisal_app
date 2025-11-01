@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 import datetime
 from django.contrib.auth.models import User # NEW: Import the User model
-
+from credit_unions.models import CreditUnion
 class LoanApplication(models.Model):
     """
     Base class for all loan applications to hold common fields.
@@ -30,7 +30,7 @@ class LoanApplication(models.Model):
     # related_name allows you to access a user's loans like user.loan_applications.all()
     # null=True, blank=True allows existing loans to not have a user initially (if you have old data)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='loan_applications', null=True, blank=True)
-
+    credit_union = models.ForeignKey(CreditUnion, on_delete=models.CASCADE, related_name='agency', null=True, blank=True)
     applicant_name = models.CharField(max_length=200, default="Default Applicant")
     applicant_email = models.EmailField(default="default@example.com")
     loan_type = models.CharField(max_length=50, choices=LOAN_TYPES, default='mortgage')
@@ -118,7 +118,8 @@ class LoanApplication(models.Model):
         return type_map.get(self.loan_type, self.loan_type)
 
 class MortgageLoanApplication(LoanApplication):
-    legal_mortgage_agreement_document = models.FileField(upload_to='mortgage_docs/legal_agreements/', blank=True, null=True)
+    # legal_mortgage_agreement_document = models.FileField(upload_to='mortgage_docs/legal_agreements/', blank=True, null=True)
+    legal_mortgage_agreement_document = models.BooleanField(default=False)
     land_title_document = models.BooleanField(default=False, help_text="Does the borrower have a Land Title in their name?")
     power_of_attorney_document = models.BooleanField(default=False, help_text="Is there a Power of Attorney (if applicable)?")
     supporting_documents = models.TextField(blank=True, null=True, help_text="List supporting documents like Site Plan, Quotes, etc.")
@@ -133,8 +134,8 @@ class MortgageLoanApplication(LoanApplication):
 
 class SalaryBackedLoanApplication(LoanApplication):
     salary_passing_union_ge_3_months = models.BooleanField(default=False)
-    copy_of_effective_service_document = models.FileField(upload_to='salary_docs/effective_service/', blank=True, null=True)
-    irrevocable_salary_transfer_document = models.FileField(upload_to='salary_docs/transfer_docs/', blank=True, null=True)
+    copy_of_effective_service_document = models.BooleanField(default=False)
+    irrevocable_salary_transfer_document = models.BooleanField(default=False)
     savings_ge_1_10_loan = models.BooleanField(default=False)
 
     class Meta:
@@ -158,8 +159,8 @@ class LoanWithinSavingsApplication(LoanApplication):
 
 class DailySavingsLoanApplication(LoanApplication):
     daily_savings_active_ge_6_months = models.BooleanField(default=False)
-    signed_deduction_agreement_document = models.FileField(upload_to='daily_savings_docs/deduction_agreements/', blank=True, null=True)
-    valid_surety_bond_document = models.FileField(upload_to='daily_savings_docs/surety_bonds/', blank=True, null=True)
+    signed_deduction_agreement_document = models.BooleanField(default=False)
+    valid_surety_bond_document = models.BooleanField(default=False)
     positive_loan_repayment_history = models.BooleanField(default=False)
     savings_balance_ge_1_5_loan = models.BooleanField(default=False)
 
@@ -192,11 +193,9 @@ class RealEstateLoanApplication(LoanApplication):
         default=False,
         help_text="Does the loan amount not exceed 10% of paid-up capital? (System Verified)"
     )
-    legal_mortgage_agreement_document_re = models.FileField(
-        upload_to='real_estate_docs/legal_agreements/',
-        blank=True,
-        null=True,
-        help_text="Scanned copy of the signed Legal Mortgage Agreement."
+    legal_mortgage_agreement_document_re = models.BooleanField(
+       default=False
+        # help_text="Scanned copy of the signed Legal Mortgage Agreement."
     )
     land_title_in_borrowers_name = models.BooleanField(
         default=False,
@@ -215,17 +214,13 @@ class RealEstateLoanApplication(LoanApplication):
         return f"Real Estate: {self.applicant_name} - {self.loan_amount} XAF"
 
 class ContainerLoanApplication(LoanApplication):
-    bill_of_lading_document = models.FileField(
-        upload_to='container_docs/bill_of_lading/',
-        blank=True,
-        null=True,
-        help_text="Upload a copy of the Bill of Lading."
+    bill_of_lading_document = models.BooleanField(
+        default=False
+        # help_text="Upload a copy of the Bill of Lading."
     )
-    custom_clearance_plan_document = models.FileField(
-        upload_to='container_docs/custom_clearance/',
-        blank=True,
-        null=True,
-        help_text="Upload the Custom Clearance Plan."
+    custom_clearance_plan_document = models.BooleanField(
+        default=False
+        # help_text="Upload the Custom Clearance Plan."
     )
     savings_balance_amount = models.DecimalField(
         max_digits=15,
@@ -286,11 +281,9 @@ class AgriculturalLoanApplication(LoanApplication):
         default=False,
         help_text="Is savings balance 1/5 or more (20%) of the loan amount? (System Verified)"
     )
-    total_cost_estimate_document = models.FileField(
-        upload_to='agricultural_docs/cost_estimates/',
-        blank=True,
-        null=True,
-        help_text="Upload the total cost estimate of products and inputs."
+    total_cost_estimate_document = models.BooleanField(
+        default=False
+        # help_text="Upload the total cost estimate of products and inputs."
     )
     valid_proof_of_source_of_income = models.BooleanField(
         default=False,
@@ -348,11 +341,9 @@ class BusinessLoanApplication(LoanApplication):
         default=False,
         help_text="A valid source of income for repayment is highly needed."
     )
-    land_documents_attached = models.FileField(
-        upload_to='business_docs/land_documents/',
-        blank=True,
-        null=True,
-        help_text="Copies of land documents attached."
+    land_documents_attached = models.BooleanField(
+        default= False
+        # help_text="Copies of land documents attached."
     )
     savings_balance_ge_20_percent_loan = models.BooleanField(
         default=False,

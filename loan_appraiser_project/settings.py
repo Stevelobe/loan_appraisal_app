@@ -33,12 +33,14 @@ INSTALLED_APPS = [
     'calculator',
     'Authentication',
     'credit_unions',
+    'corsheaders',
     'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -144,6 +146,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # This will create a 'media' folder
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/' # Or wherever you want to redirect after login
 LOGOUT_REDIRECT_URL = '/' # Or wherever you want to redirect after logout
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
 
 CORS_ALLOW_CREDENTIALS = True
 

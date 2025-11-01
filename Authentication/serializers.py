@@ -95,14 +95,32 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             raise serializers.ValidationError({
                 "detail": "Bien vouloir verifier votre nom ou email et mot de passe."
             })
+            
+        # Initialize variables
+        authenticated_user = self.user
+        credit_union_id = None
+        credit_union_name = None
+
+        try:
+            # Access the UserProfile using the related_name='profile'
+            user_profile = authenticated_user.profile
+            if user_profile.credit_union:
+                # Access the CreditUnion object
+                credit_union_id = user_profile.credit_union.id
+                credit_union_name = user_profile.credit_union.name
+        except UserProfile.DoesNotExist:
+            # The user might not have a profile, set to None
+            pass 
+
+        # Update the response data with user and credit union info
         data.update({
-            'id': self.user.id,
+            'user_id': self.user.id,
             'username': self.user.username,
             'email': self.user.email,
-            # 'is_active': self.user.is_active,
-            # 'is_staff': self.user.is_staff,
-            # 'is_superuser': self.user.is_superuser
+            'credit_union_id': credit_union_id,
+            'credit_union_name': credit_union_name,
         })
+        
         return data
 
 # This serializer is used to return selected user information to the frontend.
