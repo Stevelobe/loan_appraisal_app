@@ -58,8 +58,7 @@ class MortgageLoanAppraisalView(APIView):
 
     def post(self, request, *args, **kwargs):
         # DRF handles file uploads (multipart/form-data) seamlessly with ModelSerializer
-        serializer = MortgageLoanApplicationSerializer(data=request.data)
-        
+        serializer = MortgageLoanApplicationSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             
             # --- 1. Prepare Data for Appraisal Logic ---
@@ -136,7 +135,7 @@ class SalaryBackedLoanApplicationView(APIView):
 
     def post(self, request, *args, **kwargs):
         # DRF handles file uploads (multipart/form-data) seamlessly with ModelSerializer
-        serializer = SalaryBackedLoanApplicationSerializer(data=request.data)
+        serializer = SalaryBackedLoanApplicationSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
             
@@ -211,7 +210,7 @@ class LoanWithinSavingsApplicationView(APIView):
 
     def post(self, request, *args, **kwargs):
         # DRF handles file uploads (multipart/form-data) seamlessly with ModelSerializer
-        serializer = LoanWithinSavingsApplicationSerializer(data=request.data)
+        serializer = LoanWithinSavingsApplicationSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
             
@@ -285,7 +284,7 @@ class DailySavingsLoanApplicationView(APIView):
 
     def post(self, request, *args, **kwargs):
         # DRF handles file uploads (multipart/form-data) seamlessly with ModelSerializer
-        serializer = DailySavingsLoanApplicationSerializer(data=request.data)
+        serializer = DailySavingsLoanApplicationSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
             
@@ -361,7 +360,7 @@ class StandingOrderLoanApplicationView(APIView):
 
     def post(self, request, *args, **kwargs):
         # DRF handles file uploads (multipart/form-data) seamlessly with ModelSerializer
-        serializer = StandingOrderLoanApplicationSerializer(data=request.data)
+        serializer = StandingOrderLoanApplicationSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
             
@@ -436,7 +435,7 @@ class RealEstateLoanApplicationView(APIView):
 
     def post(self, request, *args, **kwargs):
         # DRF handles file uploads (multipart/form-data) seamlessly with ModelSerializer
-        serializer = RealEstateLoanApplicationSerializer(data=request.data)
+        serializer = RealEstateLoanApplicationSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
             
@@ -512,7 +511,7 @@ class ContainerLoanApplicationView(APIView):
 
     def post(self, request, *args, **kwargs):
         # DRF handles file uploads (multipart/form-data) seamlessly with ModelSerializer
-        serializer = ContainerLoanApplicationSerializer(data=request.data)
+        serializer = ContainerLoanApplicationSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
             
@@ -588,7 +587,7 @@ class AgriculturalLoanApplicationView(APIView):
 
     def post(self, request, *args, **kwargs):
         # DRF handles file uploads (multipart/form-data) seamlessly with ModelSerializer
-        serializer = AgriculturalLoanApplicationSerializer(data=request.data)
+        serializer = AgriculturalLoanApplicationSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
             
@@ -666,7 +665,7 @@ class ExpressLoanApplicationView(APIView):
 
     def post(self, request, *args, **kwargs):
         # DRF handles file uploads (multipart/form-data) seamlessly with ModelSerializer
-        serializer = ExpressLoanApplicationSerializer(data=request.data)
+        serializer = ExpressLoanApplicationSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
             
@@ -744,7 +743,7 @@ class BusinessLoanApplicationView(APIView):
 
     def post(self, request, *args, **kwargs):
         # DRF handles file uploads (multipart/form-data) seamlessly with ModelSerializer
-        serializer = BusinessLoanApplicationSerializer(data=request.data)
+        serializer = BusinessLoanApplicationSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
             

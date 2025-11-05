@@ -30,7 +30,7 @@ class MortgageLoanApplicationSerializer(serializers.ModelSerializer):
     
     # We must explicitly define FileFields as they are often handled differently 
     # in ModelSerializer when inheriting from a parent model.
-    legal_mortgage_agreement_document = serializers.FileField(required=False, allow_null=True)
+    legal_mortgage_agreement_document = serializers.BooleanField(required=False, allow_null=True)
 
     class Meta:
         model = MortgageLoanApplication
@@ -60,10 +60,10 @@ class MortgageLoanApplicationSerializer(serializers.ModelSerializer):
         Set the loan_type explicitly before saving the instance.
         """
         validated_data['loan_type'] = 'mortgage'
-        
+        user = self.context['request'].user
         # When saving, the MortgageLoanApplication inherits from LoanApplication 
         # via multi-table inheritance, so we create the child instance directly.
-        return MortgageLoanApplication.objects.create(**validated_data)
+        return MortgageLoanApplication.objects.create(user=user, **validated_data)
 
 class SalaryBackedLoanApplicationSerializer(serializers.ModelSerializer):
     """
@@ -76,8 +76,8 @@ class SalaryBackedLoanApplicationSerializer(serializers.ModelSerializer):
     )
 
     # File fields made optional
-    copy_of_effective_service_document = serializers.FileField(required=False, allow_null=True)
-    irrevocable_salary_transfer_document = serializers.FileField(required=False, allow_null=True)
+    copy_of_effective_service_document = serializers.BooleanField(required=False, allow_null=True)
+    irrevocable_salary_transfer_document = serializers.BooleanField(required=False, allow_null=True)
 
     class Meta:
         model = SalaryBackedLoanApplication
@@ -106,7 +106,8 @@ class SalaryBackedLoanApplicationSerializer(serializers.ModelSerializer):
         Set the loan_type explicitly before saving the instance.
         """
         validated_data['loan_type'] = 'salary_backed'
-        return SalaryBackedLoanApplication.objects.create(**validated_data)
+        user = self.context['request'].user
+        return SalaryBackedLoanApplication.objects.create(user=user, **validated_data)
 
 class LoanWithinSavingsApplicationSerializer(serializers.ModelSerializer):
     """
@@ -145,7 +146,8 @@ class LoanWithinSavingsApplicationSerializer(serializers.ModelSerializer):
         Set the loan_type explicitly before saving the instance.
         """
         validated_data['loan_type'] = 'within_savings'
-        return LoanWithinSavingsApplication.objects.create(**validated_data)
+        user = self.context['request'].user
+        return LoanWithinSavingsApplication.objects.create(user=user, **validated_data)
 
 class DailySavingsLoanApplicationSerializer(serializers.ModelSerializer):
     """
@@ -184,7 +186,8 @@ class DailySavingsLoanApplicationSerializer(serializers.ModelSerializer):
         Set the loan_type explicitly before saving the instance.
         """
         validated_data['loan_type'] = 'daily_savings'
-        return DailySavingsLoanApplication.objects.create(**validated_data)
+        user = self.context['request'].user
+        return DailySavingsLoanApplication.objects.create(user=user, **validated_data)
 
 class StandingOrderLoanApplicationSerializer(serializers.ModelSerializer):
     """
@@ -223,7 +226,8 @@ class StandingOrderLoanApplicationSerializer(serializers.ModelSerializer):
         Set the loan_type explicitly before saving the instance.
         """
         validated_data['loan_type'] = 'standing_order'
-        return StandingOrderLoanApplication.objects.create(**validated_data)
+        user = self.context['request'].user
+        return StandingOrderLoanApplication.objects.create(user=user, **validated_data)
 
 class RealEstateLoanApplicationSerializer(serializers.ModelSerializer):
     """
@@ -262,7 +266,8 @@ class RealEstateLoanApplicationSerializer(serializers.ModelSerializer):
         Set the loan_type explicitly before saving the instance.
         """
         validated_data['loan_type'] = 'real_estate'
-        return RealEstateLoanApplication.objects.create(**validated_data)
+        user = self.context['request'].user
+        return RealEstateLoanApplication.objects.create(user=user, **validated_data)
 
 class ContainerLoanApplicationSerializer(serializers.ModelSerializer):
     """
@@ -301,7 +306,8 @@ class ContainerLoanApplicationSerializer(serializers.ModelSerializer):
         Set the loan_type explicitly before saving the instance.
         """
         validated_data['loan_type'] = 'container'
-        return ContainerLoanApplication.objects.create(**validated_data)
+        user = self.context['request'].user
+        return ContainerLoanApplication.objects.create(user=user, **validated_data)
 
 class AgriculturalLoanApplicationSerializer(serializers.ModelSerializer):
     """
@@ -340,7 +346,8 @@ class AgriculturalLoanApplicationSerializer(serializers.ModelSerializer):
         Set the loan_type explicitly before saving the instance.
         """
         validated_data['loan_type'] = 'agricultural'
-        return AgriculturalLoanApplication.objects.create(**validated_data)
+        user = self.context['request'].user
+        return AgriculturalLoanApplication.objects.create(user=user, **validated_data)
 
 class ExpressLoanApplicationSerializer(serializers.ModelSerializer):
     """
@@ -379,7 +386,8 @@ class ExpressLoanApplicationSerializer(serializers.ModelSerializer):
         Set the loan_type explicitly before saving the instance.
         """
         validated_data['loan_type'] = 'express'
-        return ExpressLoanApplication.objects.create(**validated_data)
+        user = self.context['request'].user
+        return ExpressLoanApplication.objects.create(user=user, **validated_data)
 
 class BusinessLoanApplicationSerializer(serializers.ModelSerializer):
     """
@@ -418,7 +426,8 @@ class BusinessLoanApplicationSerializer(serializers.ModelSerializer):
         Set the loan_type explicitly before saving the instance.
         """
         validated_data['loan_type'] = 'business'
-        return BusinessLoanApplication.objects.create(**validated_data)
+        user = self.context['request'].user
+        return BusinessLoanApplication.objects.create(user=user, **validated_data)
 
 class LoanApplicationSerializer(serializers.ModelSerializer):
     # Optional: If you want to display the human-readable loan type instead of the code
@@ -461,10 +470,4 @@ class LoanApplicationSerializer(serializers.ModelSerializer):
         # fields = '__all__'
         
         # Optional: Make fields read-only if they should only be set by the system
-        read_only_fields = ('submission_date',) 
-        
-        # Optional: You can customize the representation of the 'user' Foreign Key
-        # If you want to see the username instead of the ID:
-        # extra_kwargs = {
-        #     'user': {'view_name': 'user-detail', 'lookup_field': 'pk', 'style': {'base_template': 'input.html'}}
-        # }
+        read_only_fields = ('submission_date','user') 

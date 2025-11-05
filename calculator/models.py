@@ -133,7 +133,7 @@ class MortgageLoanApplication(LoanApplication):
         return f"Mortgage: {self.applicant_name} - {self.loan_amount} XAF"
 
 class SalaryBackedLoanApplication(LoanApplication):
-    salary_passing_union_ge_3_months = models.BooleanField(default=False)
+    salary_passing_union_ge_3_months = models.BooleanField(default=False, null=True)
     copy_of_effective_service_document = models.BooleanField(default=False)
     irrevocable_salary_transfer_document = models.BooleanField(default=False)
     savings_ge_1_10_loan = models.BooleanField(default=False)
