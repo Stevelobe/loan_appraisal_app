@@ -10,6 +10,7 @@ import ApprovedLoansOverview from "./pages/ApprovedLoans";
 import LoanReviewDashboard from "./pages/LoanUnderReview";
 import CobacRegulations from "./pages/Reculation";
 import HomePage from "./pages/HomePage";
+import { allLoans } from "./lib/loaders";
 const App = () =>{
   const router = createBrowserRouter([
     {
@@ -34,7 +35,8 @@ const App = () =>{
         },
         {
           path: "/approved-loans",
-          element: <ApprovedLoansOverview/>
+          element: <ApprovedLoansOverview/>,
+          loader: allLoans,
         },
         {
           path: "/loan-review",

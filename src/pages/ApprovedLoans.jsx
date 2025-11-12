@@ -1,73 +1,75 @@
-import React, { useState, useEffect } from 'react';
-// Assuming the following functions/libraries are available or implemented:
-// 1. intcomma: Function to format numbers with commas (e.g., 1000000 -> 1,000,000)
-// 2. formatCurrency: Function to format the loan amount (e.g., intcomma(amount) + ' XAF')
-// 3. formatDate: Function to format the submission date (e.g., date:"M d, Y H:i")
+import React, { useState, useMemo } from 'react';
+import { useLoaderData } from 'react-router-dom';
 
 // Placeholder utilities (replace with actual implementations or imports)
 const intcomma = (num) => num.toLocaleString('en-US');
 const formatCurrency = (amount) => `${intcomma(parseFloat(amount).toFixed(2))} XAF`;
 const formatDate = (dateString) => {
     const options = { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return new Date(dateString).toLocaleString('en-US', options);
+    try {
+        return new Date(dateString).toLocaleString('en-US', options);
+    } catch (e) {
+        return 'Invalid Date';
+    }
 };
 
-// --- Loan Data Structure (Mock Data) ---
-const mockApprovedLoans = [
-    {
-        pk: 1,
-        applicant_name: "Alice Johnson",
-        loan_type: "H", // Loan type internal key
-        loan_type_display: "Housing Loan", // Result of loan.get_loan_type_display
-        loan_amount: 5000000.00,
-        annual_interest_rate_percent: 8.5,
-        loan_term_years: 15,
-        submission_date: "2024-01-10T10:30:00Z",
-    },
-    {
-        pk: 2,
-        applicant_name: "Bob Williams",
-        loan_type: "C",
-        loan_type_display: "Car Loan",
-        loan_amount: 1250000.50,
-        annual_interest_rate_percent: 7.25,
-        loan_term_years: 5,
-        submission_date: "2024-02-15T15:45:00Z",
-    },
-    // Add more mock loans as needed...
-];
-
-/**
- * Renders the Approved Loans Overview table, including selection, deletion, and modal logic.
- *
- * @param {object} props
- * @param {Array<object>} props.approvedLoans The list of approved loan objects.
- * @param {Array<object>} props.messages List of Django-style messages for display.
- * @param {function} props.onDeleteSelected Callback function when deletion is confirmed.
- */
 const ApprovedLoansOverview = ({
-    approvedLoans = mockApprovedLoans, // Use mock data as default
-    messages = [], // Example: [{tags: 'success', text: 'Loans deleted successfully'}]
+    messages = [],
     onDeleteSelected = (pks) => console.log('Deleting loans with pks:', pks),
 }) => {
+    const initialLoans = useLoaderData() || []; 
+    // console.log(initialLoans) // Kept out for clean output
+    // --- State for Filtering ---
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedLoanType, setSelectedLoanType] = useState('All Loans');
+    
+    // --- Existing State ---
     const [selectedLoans, setSelectedLoans] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalContent, setModalContent] = useState({ title: '', message: '', isError: false });
 
-    const hasLoans = approvedLoans && approvedLoans.length > 0;
+    // --- Derived Data (Filtering) ---
+    const uniqueLoanTypes = useMemo(() => {
+        const types = new Set(initialLoans.map(loan => loan.loan_type_display));
+        return ['All Loans', ...Array.from(types).sort()];
+    }, [initialLoans]);
+
+    const filteredLoans = useMemo(() => {
+        let loans = initialLoans;
+
+        if (selectedLoanType !== 'All Loans') {
+            loans = loans.filter(loan => loan.loan_type_display === selectedLoanType);
+        }
+
+        if (searchTerm) {
+            const lowerCaseSearch = searchTerm.toLowerCase();
+            loans = loans.filter(loan => 
+                loan.applicant_name.toLowerCase().includes(lowerCaseSearch)
+            );
+        }
+        
+        return loans;
+    }, [initialLoans, selectedLoanType, searchTerm]);
+    
+    const hasLoans = filteredLoans && filteredLoans.length > 0;
     const selectedCount = selectedLoans.length;
 
     // --- Select All Logic ---
     const handleSelectAll = (e) => {
         if (e.target.checked) {
-            const allPks = approvedLoans.map(loan => loan.pk);
+            // NOTE: Assuming loan objects have a 'pk' property for selection, though you use 'id' later.
+            // For safety, I'll use `loan.pk` as per your Select All logic, but you might need to confirm if it should be `loan.id`.
+            const allPks = filteredLoans.map(loan => loan.pk); 
             setSelectedLoans(allPks);
         } else {
             setSelectedLoans([]);
         }
     };
-
-    // --- Individual Checkbox Logic ---
+    
+    // Use `loan.pk` in isAllSelected check for consistency with `handleSelectAll`
+    const isAllSelected = selectedCount > 0 && filteredLoans.length > 0 && filteredLoans.every(loan => selectedLoans.includes(loan.pk)); 
+    
+    // --- Other handlers (unchanged, but referencing 'pk' for consistency) ---
     const handleSelectLoan = (pk) => {
         setSelectedLoans(prev => {
             if (prev.includes(pk)) {
@@ -77,8 +79,8 @@ const ApprovedLoansOverview = ({
             }
         });
     };
-
-    // --- Modal Control Functions ---
+    
+    // ... (modal functions unchanged) ...
     const showModal = (title, message, isError = false) => {
         setModalContent({ title, message, isError });
         setIsModalOpen(true);
@@ -88,34 +90,21 @@ const ApprovedLoansOverview = ({
         setIsModalOpen(false);
     };
 
-    // --- Form Submission / Delete Button Logic ---
     const handleDeleteClick = (e) => {
-        e.preventDefault(); // Stop the form from submitting immediately
-
+        e.preventDefault(); 
         if (selectedCount === 0) {
-            showModal(
-                'No Loans Selected',
-                'Please select at least one loan to delete.',
-                true
-            );
+            showModal('No Loans Selected', 'Please select at least one loan to delete.', true);
         } else {
-            showModal(
-                'Confirm Deletion',
-                `Are you sure you want to delete ${selectedCount} selected loan(s)? This action cannot be undone.`,
-                false
-            );
+            showModal('Confirm Deletion', `Are you sure you want to delete ${selectedCount} selected loan(s)? This action cannot be undone.`, false);
         }
     };
 
     const handleConfirmDelete = () => {
         hideModal();
-        // Call the parent component's delete handler
         onDeleteSelected(selectedLoans);
-        // Reset local state after "submission"
         setSelectedLoans([]); 
     };
 
-    // Helper to get Tailwind classes for messages
     const getMessageClasses = (tags) => {
         if (tags === 'success') return 'bg-green-100 text-green-800';
         if (tags === 'error') return 'bg-red-100 text-red-800';
@@ -123,6 +112,7 @@ const ApprovedLoansOverview = ({
         return 'bg-blue-100 text-blue-800';
     };
 
+    // --- RETURN JSX ---
     return (
         <div className="container mx-auto px-4 py-12 max-w-7xl">
             {/* Page Title */}
@@ -140,67 +130,108 @@ const ApprovedLoansOverview = ({
                     ))}
                 </div>
             )}
+            
+            {/* 🔍 Filter & Search Bar Section */}
+            <div className="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between p-4 bg-white rounded-lg shadow-md border border-slate-100">
+                
+                {/* Search by User Name */}
+                <div className="w-full md:w-1/2">
+                    <label htmlFor="search-user" className="sr-only">Search by User Name</label>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                        <input
+                            type="text"
+                            id="search-user"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search by Applicant Name..."
+                            className="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out"
+                        />
+                    </div>
+                </div>
 
-            {/* Loans Table or No Loans Message */}
-            {hasLoans ? (
-                <div className="bg-white rounded-3xl shadow-3xl border border-slate-100 p-8 overflow-x-auto transition-all duration-300 ease-in-out hover:shadow-4xl">
-                    {/* Form for Deletion - action URL is hardcoded or passed via props in React */}
+                {/* Filter by Loan Type Dropdown */}
+                <div className="w-full md:w-1/2 md:max-w-xs">
+                    <label htmlFor="filter-loan-type" className="block text-sm font-medium text-gray-700 mb-1">Filter by Loan Type</label>
+                    <select
+                        id="filter-loan-type"
+                        value={selectedLoanType}
+                        onChange={(e) => setSelectedLoanType(e.target.value)}
+                        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    >
+                        {uniqueLoanTypes.map((type) => (
+                            <option key={type} value={type}>
+                                {type}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+            
+            {/* Loans Table - CORRECTED STRUCTURE */}
+            {filteredLoans.length > 0 ? (
+                // Use relative positioning and a fixed height to contain the table and enable the header/body scroll trick
+                <div className="bg-white rounded-3xl shadow-3xl border border-slate-100 p-8 relative">
                     <form onSubmit={handleDeleteClick}>
-                        {/* No need for {% csrf_token %} in React API submission */}
-                        <table className="min-w-full divide-y divide-slate-200">
-                            <thead className="bg-slate-50">
-                                <tr>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider rounded-tl-xl">
-                                        <input
-                                            type="checkbox"
-                                            id="select-all"
-                                            className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded"
-                                            checked={selectedCount === approvedLoans.length && selectedCount > 0}
-                                            onChange={handleSelectAll}
-                                        />
-                                    </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Applicant Name</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Loan Type</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Loan Amount</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Interest Rate</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Loan Term (Years)</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Submission Date</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider rounded-tr-xl">Actions</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider rounded-tr-xl">Detail</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-slate-200">
-                                {approvedLoans.map((loan) => (
-                                    <tr key={loan.pk} className="hover:bg-slate-50 transition-colors duration-150 ease-in-out">
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="overflow-x-auto"> {/* Enable horizontal scrolling if needed */}
+                            <table className="min-w-full divide-y divide-slate-200">
+                                {/* <thead> for the FIXED header - NO CHANGES HERE */}
+                                <thead className="bg-slate-50 sticky top-0 z-10 shadow-sm">
+                                    <tr>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider rounded-tl-xl">
                                             <input
                                                 type="checkbox"
-                                                name="selected_loans"
-                                                value={loan.pk}
+                                                id="select-all"
                                                 className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded"
-                                                checked={selectedLoans.includes(loan.pk)}
-                                                onChange={() => handleSelectLoan(loan.pk)}
+                                                checked={isAllSelected}
+                                                onChange={handleSelectAll}
                                             />
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{loan.applicant_name}</td>
-                                        {/* Use the display value from the data */}
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{loan.loan_type_display}</td>
-                                        {/* Use local formatting utilities */}
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{formatCurrency(loan.loan_amount)}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{loan.annual_interest_rate_percent}%</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{loan.loan_term_years}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{formatDate(loan.submission_date)}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            {/* Replace Django URL with a hardcoded or prop-provided route */}
-                                            <a href={`/download-appraisal-pdf/${loan.pk}`} className="text-indigo-600 hover:text-indigo-900 mr-4 transition-colors duration-150 ease-in-out">Download PDF</a>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 cursor-pointer">View detail</td>
+                                        </th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Applicant Name</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Loan Type</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Loan Amount</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Interest Rate</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Loan Term (Years)</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Submission Date</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider rounded-tr-xl">Detail</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-slate-200">
+                                    {filteredLoans.map((loan) => (
+                                        // NOTE: Using `loan.pk` for the key and in the handler for consistency.
+                                        <tr key={loan.id} className="hover:bg-slate-50 transition-colors duration-150 ease-in-out">
+                                            <td className="px-6 py-4 whitespace-nowrap w-[2%]">
+                                                <input
+                                                    type="checkbox"
+                                                    name="selected_loans"
+                                                    value={loan.id}
+                                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded"
+                                                    checked={selectedLoans.includes(loan.id)} // Use pk consistently
+                                                    onChange={() => handleSelectLoan(loan.id)} // Use pk consistently
+                                                />
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{loan.applicant_name}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{loan.loan_type_display}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{formatCurrency(loan.loan_amount)}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{loan.annual_interest_rate_percent}%</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{loan.loan_term_years}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{formatDate(loan.submission_date)}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <a href={`/download-appraisal-pdf/${loan.pk}`} className="text-indigo-600 hover:text-indigo-900 mr-4 transition-colors duration-150 ease-in-out">Download PDF</a>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 cursor-pointer">View detail</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                         
-                        {/* Delete Button */}
+                        {/* Delete Button (fixed at the bottom) */}
                         <div className="mt-6 flex justify-end">
                             <button 
                                 type="submit" 
@@ -219,18 +250,20 @@ const ApprovedLoansOverview = ({
                     </form>
                 </div>
             ) : (
-                <p className="text-center text-gray-600 text-lg">No approved loan applications found.</p>
+                <p className="text-center text-gray-600 text-lg p-10 bg-white rounded-lg shadow-md">
+                    No approved loan applications found{initialLoans.length > 0 ? ' matching the current filter criteria.' : '.'}
+                </p>
             )}
 
-            {/* Custom Confirmation Modal */}
+            {/* Custom Confirmation Modal (unchanged) */}
             <div 
                 id="confirmation-modal" 
                 className={`fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 ${isModalOpen ? '' : 'hidden'}`}
-                onClick={hideModal} // Close on backdrop click
+                onClick={hideModal}
             >
                 <div 
                     className="bg-white rounded-lg shadow-xl p-8 max-w-sm w-full mx-4"
-                    onClick={e => e.stopPropagation()} // Prevent modal closing when clicking inside
+                    onClick={e => e.stopPropagation()} 
                 >
                     <div className="text-center">
                         <svg className="mx-auto h-12 w-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

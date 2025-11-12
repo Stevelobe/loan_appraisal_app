@@ -5,22 +5,22 @@ const LoanSelection = ({
   totalApprovedLoans = 0,
   loanTypes = [
     // ... your 10 loan types remain here ...
-    { value: 'mortgage-loan', label: 'Mortgage Loan' }, 
-    { value: 'salary-loan', label: 'Salary-Backed Loan' }, 
-    { value: 'loan-within-saving', label: 'Loan Within Savings' },
-    { value: 'daily-loan', label: 'Daily Savings Loan' },
-    { value: 'stading-loan', label: 'Standing Order Loan' },
-    { value: 'real-estate-loan', label: 'Real Estate Loan' },
-    { value: 'container-loan', label: 'Container Loan' },
-    { value: 'agricultural-loan', label: 'Agricultural Loan' },
-    { value: 'express-loan', label: 'Express Loan' },
-    { value: 'business-loan', label: 'Business Loan' },
+    { value: 'Mortgage Loan', label: 'Mortgage Loan' }, 
+    { value: 'Salary-Backed Loan', label: 'Salary-Backed Loan' }, 
+    { value: 'Loan Within Savings', label: 'Loan Within Savings' },
+    { value: 'Daily Savings Loan', label: 'Daily Savings Loan' },
+    { value: 'Standing Order Loan', label: 'Standing Order Loan' },
+    { value: 'Real Estate Loan', label: 'Real Estate Loan' },
+    { value: 'Container Loan', label: 'Container Loan' },
+    { value: 'Agricultural Loan', label: 'Agricultural Loan' },
+    { value: 'Express Loan', label: 'Express Loan' },
+    { value: 'Business Loan', label: 'Business Loan' },
   ],
   recentApplications = [],
   // We rename onLoanSelect to something like onAppraisalStart and make it local
   getLoanTypeDisplay = (type) => type.toUpperCase(),
 }) => {
-  const [selectedLoanType, setSelectedLoanType] = useState(loanTypes.length > 0 ? loanTypes[0].value : '');
+  const [loan_type_display, setSelectedLoanType] = useState(loanTypes.length > 0 ? loanTypes[0].value : '');
   const [error, setError] = useState(null);
   // NEW STATE: To switch between selection screen and form screen
   const [appraisalLoanType, setAppraisalLoanType] = useState(null); 
@@ -30,10 +30,10 @@ const LoanSelection = ({
   // Function to start the appraisal form
   const handleAppraisalStart = (e) => {
     e.preventDefault();
-    if (selectedLoanType) {
+    if (loan_type_display) {
       setError(null);
       // Set the selected loan type to start the multi-step form
-      setAppraisalLoanType(selectedLoanType); 
+      setAppraisalLoanType(loan_type_display); 
     } else {
       setError('Please select a loan type before proceeding.');
     }
@@ -125,7 +125,7 @@ const LoanSelection = ({
                 <select
                   id="loan_type_select"
                   name="loan_type"
-                  value={selectedLoanType}
+                  value={loan_type_display}
                   onChange={(e) => setSelectedLoanType(e.target.value)}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
                   required
